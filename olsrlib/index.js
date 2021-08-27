@@ -9,7 +9,7 @@ const MSG_NAMES = {
   201: 'LQ_HELLO', 202: 'LQ_TC'
 };
 const LINK_TYPE = [ 'UNSPEC', 'ASYM', 'SYM', 'LOST' ];
-const NEIGHBOR_TYPE = [ 'SYM', 'MPR', 'NOT', '<UNKNOWN>' ];
+const NEIGHBOR_TYPE = [ 'SYM', 'MPR', 'NOT', '<3>' ];
 const NAME_TYPES = [ 'HOST', 'FORWARDER', 'SERVICE', 'LATLON', 'MACADDR' ];
 
 class OLSR extends Emitter {
@@ -27,18 +27,17 @@ class OLSR extends Emitter {
 
   incomingMessage(msg) {
     const len = msg.readUInt16BE(0);
-    const seqnr = msg.readUInt16BE(2);
+    //const seqnr = msg.readUInt16BE(2);
 
     if (len != msg.length) {
       Log('Bad message length: specified:', len, 'actual:', msg.length);
       return;
     }
 
-    //Log('Packet:');
     let msgsize = 0;
     for (let offset = 4; offset < len; offset += msgsize) {
       const msgtype = msg.readUInt8(offset + 0);
-      const vtime = msg.readUInt8(offset + 1);
+      //const vtime = msg.readUInt8(offset + 1);
       msgsize = msg.readUInt16BE(offset + 2);
       const originator = this.toIPAddress(msg.slice(offset + 4, offset + 8));
       const ttl = msg.readUInt8(offset + 8);
@@ -50,14 +49,14 @@ class OLSR extends Emitter {
       }
       const payload = msg.slice(offset + 12, offset + msgsize);
 
-      const validityTimeSeconds = 0.0625 * (1 + (vtime >> 4)) * Math.pow(2, vtime & 15);
+      //const validityTimeSeconds = 0.0625 * (1 + (vtime >> 4)) * Math.pow(2, vtime & 15);
 
       const message = Object.assign({
         timestamp: Date.now(),
-        type: MSG_NAMES[msgtype] || '<UNKNOWN>',
+        type: MSG_NAMES[msgtype] || `<${msgtype}>`,
         originator: originator,
         ttl: ttl,
-        hopcount: hopcount,
+        hops: hopcount,
         seqnr: msgseqnr
       }, this.isValidMsg(originator, ttl, msgseqnr, payload));
 
@@ -84,6 +83,7 @@ class OLSR extends Emitter {
           this.incomingLQTC(message, payload);
           break;
         default:
+          message.payload = payload;
           break;
       }
 
@@ -204,9 +204,10 @@ class OLSR extends Emitter {
     const nr = payload.readUInt16BE(2);
     let offset = 4;
     for (let i = 0; i < nr; i++) {
+      const type = payload.readUInt16BE(offset);
       const nlen = payload.readUInt16BE(offset + 2);
       const name = {
-        type: NAME_TYPES[payload.readUInt16BE(offset)] || '<UNKNOWN>',
+        type: NAME_TYPES[type] || `<${type}>`,
         name: payload.slice(offset + 20, offset + 20 + nlen).toString('latin1')
       };
       if (name.type !== 'SERVICE') {
@@ -241,8 +242,8 @@ class OLSR extends Emitter {
     });
 
     const oldPayload = originatorState.messages[seqnr];
-    const seqdiff = (seqnr - originatorState.seqnr) & 0xFFFF;
-    if (seqdiff === 0 || seqdiff >= 0x8000) {
+    const seqdiff = (originatorState.seqnr - seqnr) & 0xFFFF;
+    if (seqdiff >= 0 && seqdiff < 0x8000) {
       if (!oldPayload || payload.compare(oldPayload) !== 0) {
         valid.outOfOrder = true;
       }
