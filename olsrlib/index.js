@@ -22,14 +22,7 @@ class OLSR extends Emitter {
   open(portnr) {
     this.udp = Dgram.createSocket({ type: 'udp4' });
     this.udp.bind(portnr || DEFAULT_PORT);
-    this.udp.on('message', msg => {
-      try {
-        this.incomingMessage(msg);
-      }
-      catch (e) {
-        Log(e);
-      }
-    });
+    this.udp.on('message', msg => this.incomingMessage(msg));
   }
 
   incomingMessage(msg) {
@@ -59,15 +52,14 @@ class OLSR extends Emitter {
 
       const validityTimeSeconds = 0.0625 * (1 + (vtime >> 4)) * Math.pow(2, vtime & 15);
 
-      const message = {
+      const message = Object.assign({
         timestamp: Date.now(),
-        valid: this.isValidMsg(originator, ttl, msgseqnr, payload),
         type: MSG_NAMES[msgtype] || '<UNKNOWN>',
         originator: originator,
         ttl: ttl,
         hopcount: hopcount,
         seqnr: msgseqnr
-      };
+      }, this.isValidMsg(originator, ttl, msgseqnr, payload));
 
       switch (message.type) {
         case 'HELLO':
