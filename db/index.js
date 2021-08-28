@@ -23,26 +23,46 @@ const Database = {
     await this.db.exec('PRAGMA cache_size = 20000');
     await this.db.exec('PRAGMA synchronous = OFF');
     await this.db.exec('PRAGMA journal_mode = MEMORY');
-    await this.db.exec('CREATE TABLE IF NOT EXISTS messages (timestamp INTEGER, valid INTEGER, duplicate INTEGER, outOfOrder INTEGER, hops INTEGER, originator TEXT, json TEXT)');
-    await this.db.exec('CREATE INDEX IF NOT EXISTS messages_timestamp ON messages (timestamp)');
+
+    await this.db.exec('CREATE TABLE IF NOT EXISTS message (timestamp INTEGER, json TEXT)');
+    await this.db.exec('CREATE TABLE IF NOT EXISTS messageSummary (timestamp INTEGER, valid INTEGER, duplicate INTEGER, outOfOrder INTEGER, maxHop INTEGER, originator TEXT)');
+    await this.db.exec('CREATE TABLE IF NOT EXISTS messageSummaryMessage(timestamp INTEGER, sid INTEGER UNIQUE, mid INTEGER UNIQUE)');
+    await this.db.exec('CREATE TABLE IF NOT EXISTS messageHourlySummary (timestamp INTEGER, valid INTEGER, duplicate INTEGER, outOfOrder INTEGER, maxHop INTEGER)');
+
+    await this.db.exec('CREATE INDEX IF NOT EXISTS messageTimestamp ON message (timestamp)');
+    await this.db.exec('CREATE INDEX IF NOT EXISTS messageSummaryTimestamp ON messageSummary (timestamp)');
+    await this.db.exec('CREATE INDEX IF NOT EXISTS messageHourlySummaryTimestamp ON messageHourlySummary (timestamp)');
   },
 
   async addMessage(message) {
-    this.db.run('INSERT INTO messages (timestamp, valid, duplicate, outOfOrder, hops, originator, json) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      message.timestamp,
-      message.valid ? 1 : 0,
-      message.duplicate ? 1 : 0,
-      message.outOfOrder ? 1 : 0,
-      message.hops,
-      message.originator,
-      JSON.stringify(message)
-    );
+    const [ m, s ] = await Promise.all([
+      this.db.run('INSERT INTO message (timestamp, json) VALUES(:timestamp, :json)', { ':timestamp': message.timestamp, ':json': JSON.stringify(message) }),
+      this.db.run('INSERT INTO messageSummary (timestamp, valid, duplicate, outOfOrder, maxHop, originator) VALUES (:timestamp, :valid, :duplicate, :outOfOrder, :maxHop, :originator)', { ':timestamp': message.timestamp, ':valid': message.valid, ':duplicate': message.duplicate, ':outOfOrder': message.outOfOrder, ':maxHop': message.maxHop, ':originator': message.originator })
+    ]);
+    await this.db.exec('INSERT INTO messageSummaryMessage (timestamp, sid, mid) VALUES (:timestamp, :sid, :mid)', { ':timestamp': message.timestamp, ':sid': s.lastID, ':mid': m.lastID });
+
     // Trim messages periodically
     const now = Date.now();
     if (now > this._messageTrim.last) {
       this._messageTrim.last = now + this._messageTrim.often;
-      this.db.run('DELETE FROM messages WHERE timestamp < ?', now - this._messageTrim.age);
+      const when = { ':when': now - this._messageTrim.age }
+      await Promise.all([
+        this.db.exec('DELETE FROM messageSummary WHERE timestamp < :timestamp', when),
+        this.db.exec('DELETE FROM messageSummary WHERE timestamp < :timestamp', when),
+        this.db.exec('DELETE FROM messageSummaryMessage WHERE timestamp < :timestamp', when),
+        this.db.exec('DELETE FROM messageHourlySummary WHERE timestamp < :timestamp', when)
+      ]);
     }
+  },
+
+  async addMessageHourlySummary(summary) {
+    this.db.run('INSERT INTO messageHourlySummary (timestamp, valid, duplicate, outOfOrder, maxHop) VALUES (?, ?, ?, ?, ?)',
+      summary.timestamp,
+      summary.valid,
+      summary.duplicate,
+      summary.outOfOrder,
+      summary.maxHop
+    );
   },
 
   setMessageTrim(age, often) {
@@ -52,27 +72,31 @@ const Database = {
   },
 
   async totalCount(from, to) {
-    return (await this.db.get('SELECT COUNT(*) FROM messages WHERE timestamp >= ? AND timestamp <= ?', from, to))['COUNT(*)'];
+    return (await this.db.get('SELECT COUNT(*) FROM messageSummary WHERE timestamp >= ? AND timestamp <= ?', from, to))['COUNT(*)'];
   },
 
   async validCount(from, to) {
-    return (await this.db.get('SELECT COUNT(*) FROM messages WHERE valid = 1 AND timestamp >= ? AND timestamp <= ?', from, to))['COUNT(*)'];
+    return (await this.db.get('SELECT COUNT(*) FROM messageSummary WHERE valid = 1 AND timestamp >= ? AND timestamp <= ?', from, to))['COUNT(*)'];
   },
 
   async invalidCount(from, to) {
-    return (await this.db.get('SELECT COUNT(*) FROM messages WHERE valid = 0 AND duplicate = 0 AND timestamp >= ? AND timestamp <= ?', from, to))['COUNT(*)'];
+    return (await this.db.get('SELECT COUNT(*) FROM messageSummary WHERE valid = 0 AND duplicate = 0 AND timestamp >= ? AND timestamp <= ?', from, to))['COUNT(*)'];
   },
 
   async duplicateCount(from, to) {
-    return (await this.db.get('SELECT COUNT(*) FROM messages WHERE duplicate = 1 AND timestamp >= ? AND timestamp <= ?', from, to))['COUNT(*)'];
+    return (await this.db.get('SELECT COUNT(*) FROM messageSummary WHERE duplicate = 1 AND timestamp >= ? AND timestamp <= ?', from, to))['COUNT(*)'];
   },
 
   async outOfOrderCount(from, to) {
-    return (await this.db.get('SELECT COUNT(*) FROM messages WHERE outOfOrder = 1 AND timestamp >= ? AND timestamp <= ?', from, to))['COUNT(*)'];
+    return (await this.db.get('SELECT COUNT(*) FROM messageSummary WHERE outOfOrder = 1 AND timestamp >= ? AND timestamp <= ?', from, to))['COUNT(*)'];
   },
 
   async maxHopCount(from, to) {
-    return (await this.db.get('SELECT MAX(hops) FROM messages WHERE valid = 1 AND timestamp >= ? AND timestamp <= ?', from, to))['MAX(hops)'];
+    return (await this.db.get('SELECT MAX(maxHop) FROM messageSummary WHERE valid = 1 AND timestamp >= ? AND timestamp <= ?', from, to))['MAX(maxHop)'];
+  },
+
+  async messageSummary(from) {
+    return (await this.db.get('SELECT * FROM messageHourlySummary WHERE timestamp = ?', from)) || {};
   }
 };
 

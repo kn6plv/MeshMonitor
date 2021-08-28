@@ -13,26 +13,25 @@ class Summary extends Page {
 
   async select() {
     this.updates = {};
-    this.html('info', this.template.Summary({
-      chart5min: [
-        await this.generateChart({ id: 'valid_m', title: 'Valid', color: 'green', key: 'validCount', step: 10, scale: 10, adjustY: 200, labels: MIN5_AXIS, ticks: 6 }),
-        await this.generateChart({ id: 'duplicate_m', title: 'Duplicate', color: 'blue', key: 'duplicateCount', step: 10, scale: 10, adjustY: 200, labels: MIN5_AXIS, ticks: 6 }),
-        await this.generateChart({ id: 'outoforder_m', title: 'Out Of Order', color: 'salmon', key: 'outOfOrderCount', step: 10, scale: 10, adjustY: 200, labels: MIN5_AXIS, ticks: 6 }),
-        await this.generateChart({ id: 'maxhop_m', title: 'Max Hops', color: 'purple', key: 'maxHopCount', step: 10, scale: 1, adjustY: 30, labels: MIN5_AXIS, ticks: 6 }),
-      ],
-      chart1hour: [
-        await this.generateChart({ id: 'valid_h', title: 'Valid', color: 'green', key: 'validCount', step: 300, scale: 300, adjustY: 200, labels: HOUR1_AXIS, ticks: 7 }),
-        await this.generateChart({ id: 'duplicate_h', title: 'Duplicate', color: 'blue', key: 'duplicateCount', step: 300, scale: 300, adjustY: 200, labels: HOUR1_AXIS, ticks: 7 }),
-        await this.generateChart({ id: 'outoforder_h', title: 'Out Of Order', color: 'salmon', key: 'outOfOrderCount', step: 300, scale: 300, adjustY: 200, labels: HOUR1_AXIS, ticks: 7 }),
-        await this.generateChart({ id: 'maxhop_h', title: 'Max Hops', color: 'purple', key: 'maxHopCount', step: 300, scale: 1, adjustY: 30, labels: HOUR1_AXIS, ticks: 7 }),
-      ],
-      chart1day: [
-        await this.generateChart({ id: 'valid_d', title: 'Valid', color: 'green', key: 'validCount', step: 3600, scale: 3600, adjustY: 200, labels: DAY1_AXIS, ticks: 13 }),
-        await this.generateChart({ id: 'duplicate_d', title: 'Duplicate', color: 'blue', key: 'duplicateCount', step: 3600, scale: 3600, adjustY: 200, labels: DAY1_AXIS, ticks: 13 }),
-        await this.generateChart({ id: 'outoforder_d', title: 'Out Of Order', color: 'salmon', key: 'outOfOrderCount', step: 3600, scale: 3600, adjustY: 200, labels: DAY1_AXIS, ticks: 13 }),
-        await this.generateChart({ id: 'maxhop_d', title: 'Max Hops', color: 'purple', key: 'maxHopCount', step: 3600, scale: 1, adjustY: 30, labels: DAY1_AXIS, ticks: 13 }),
-      ]
-    }));
+    const chart5min = [
+      await this.generateChart({ id: 'valid_m', title: 'Valid', color: 'green', key: 'validCount', step: 10, scale: 10, adjustY: 200, labels: MIN5_AXIS, ticks: 6 }),
+      await this.generateChart({ id: 'duplicate_m', title: 'Duplicate', color: 'blue', key: 'duplicateCount', step: 10, scale: 10, adjustY: 200, labels: MIN5_AXIS, ticks: 6 }),
+      await this.generateChart({ id: 'outoforder_m', title: 'Out Of Order', color: 'salmon', key: 'outOfOrderCount', step: 10, scale: 10, adjustY: 200, labels: MIN5_AXIS, ticks: 6 }),
+      await this.generateChart({ id: 'maxhop_m', title: 'Max Hops', color: 'purple', key: 'maxHopCount', step: 10, scale: 1, adjustY: 30, labels: MIN5_AXIS, ticks: 6 }),
+    ];
+    const chart1hour = [
+      await this.generateChart({ id: 'valid_h', title: 'Valid', color: 'green', key: 'validCount', step: 300, scale: 300, adjustY: 200, labels: HOUR1_AXIS, ticks: 7 }),
+      await this.generateChart({ id: 'duplicate_h', title: 'Duplicate', color: 'blue', key: 'duplicateCount', step: 300, scale: 300, adjustY: 200, labels: HOUR1_AXIS, ticks: 7 }),
+      await this.generateChart({ id: 'outoforder_h', title: 'Out Of Order', color: 'salmon', key: 'outOfOrderCount', step: 300, scale: 300, adjustY: 200, labels: HOUR1_AXIS, ticks: 7 }),
+      await this.generateChart({ id: 'maxhop_h', title: 'Max Hops', color: 'purple', key: 'maxHopCount', step: 300, scale: 1, adjustY: 30, labels: HOUR1_AXIS, ticks: 7 }),
+    ];
+    const chart1day = [
+      await this.generateChart2({ id: 'valid_d', title: 'Valid', color: 'green', key: 'valid', step: 3600, scale: 3600, adjustY: 200, labels: DAY1_AXIS, ticks: 13 }),
+      await this.generateChart2({ id: 'duplicate_d', title: 'Duplicate', color: 'blue', key: 'duplicate', step: 3600, scale: 3600, adjustY: 200, labels: DAY1_AXIS, ticks: 13 }),
+      await this.generateChart2({ id: 'outoforder_d', title: 'Out Of Order', color: 'salmon', key: 'outOfOrder', step: 3600, scale: 3600, adjustY: 200, labels: DAY1_AXIS, ticks: 13 }),
+      await this.generateChart2({ id: 'maxhop_d', title: 'Max Hops', color: 'purple', key: 'maxHop', step: 3600, scale: 1, adjustY: 30, labels: DAY1_AXIS, ticks: 13 }),
+    ];
+    this.html('info', this.template.Summary({ chart5min, chart1hour, chart1day }));
   }
 
   async deselect() {
@@ -46,6 +45,22 @@ class Summary extends Page {
     let from = to - config.labels.length * step;
     for (; from < to; from += step) {
       data.push(Math.round(await DB[config.key](from, from + step) / config.scale));
+    }
+    this.updates[config.id] = async () => {
+      const to = step * Math.floor(Date.now() / step);
+      const ndata = [ Math.round(await DB[config.key](to - step, to) / config.scale) ];
+      this.send(`chart.update.response.${config.id}`, { data: ndata });
+    }
+    return Object.assign(config, { data: data, labels: JSON.stringify(config.labels) });
+  }
+
+  async generateChart2(config) {
+    const data = [];
+    const step = config.step * 1000;
+    const to = step * Math.floor(Date.now() / step);
+    let from = to - config.labels.length * step;
+    for (; from < to; from += step) {
+      data.push(Math.round((await DB.messageSummary(from + step))[config.key] / config.scale));
     }
     this.updates[config.id] = async () => {
       const to = step * Math.floor(Date.now() / step);

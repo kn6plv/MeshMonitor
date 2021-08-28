@@ -56,7 +56,7 @@ class OLSR extends Emitter {
         type: MSG_NAMES[msgtype] || `<${msgtype}>`,
         originator: originator,
         ttl: ttl,
-        hops: hopcount,
+        maxHop: hopcount,
         seqnr: msgseqnr
       }, this.isValidMsg(originator, ttl, msgseqnr, payload));
 
