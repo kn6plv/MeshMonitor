@@ -1,12 +1,11 @@
 const Template = require('./Template');
 const Side = require('./Side');
-const Page = require('./Page');
+const Summary = require('./Summary');
 const Log = require('debug')('ui');
 
 async function HTML(ctx) {
   Template.load();
-  ctx.body = Template.Main({
-  });
+  ctx.body = Template.Main();
   ctx.type = 'text/html';
 }
 
@@ -36,9 +35,9 @@ async function WS(ctx) {
   };
   State.side = new Side(State);
   State.tabs = {
-    main: new Page(State)
+    summary: new Summary(State)
   };
-  State.current = State.tabs.main,
+  State.current = State.tabs.summary,
   State.side.select();
   State.current.select();
 

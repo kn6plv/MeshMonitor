@@ -2,17 +2,51 @@
   <canvas id="{{id}}" width="1" height="1"></canvas>
   <script>
   (function(){
-    new Chart(document.getElementById('{{id}}'), {
+    const chart = new Chart(document.getElementById('{{id}}'), {
       type: 'line',
       data: {
-        labels: [ '-3', '-2', '-1', 'Now' ],
+        labels: {{{labels}}},
         datasets: [{
           label: '{{title}}',
           data: [ {{data}} ],
           borderColor: [ '{{color}}' ]
         }]
+      },
+      options: {
+        scales: {
+          x: {
+            ticks: {
+              autoSkip: false,
+              align: 'end',
+              maxRotation: 0,
+              minRotation: 0,
+              maxTicksLimit: {{ticks}}
+            }
+          },
+          y: {
+            suggestedMin: 0,
+            {{#if adjustY}}
+            beforeUpdate: (ctx) => {
+              ctx._userMax = Math.ceil(ctx.end / {{adjustY}}) * {{adjustY}};
+            }
+            {{/if}}
+          }
+        }
       }
     });
+    onMessage['chart.update.response.{{id}}'] = msg => {
+      const ndata = msg.value.data;
+      const data = chart.data.datasets[0].data;
+      for (let i = 0; i < ndata.length; i++) {
+        data.shift();
+        data.push(ndata[i]);
+      }
+      chart.update();
+    }
+    whenVisible({{step}}, () => {
+      send('chart.update.request', '{{id}}');
+    });
+    chart.update();
   })();
   </script>
 </div>

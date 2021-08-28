@@ -1,27 +1,34 @@
-const DB = require('better-sqlite3');
+const SQLite3 = require('sqlite3');
+const SQLite = require('sqlite');
 const Log = require('debug')('db');
-
-const db = new DB('state/olsr.db', {
-  verbose: Log.enabled ? Log : null
-});
-
-db.prepare('CREATE TABLE IF NOT EXISTS messages (timestamp INTEGER, valid INTEGER, duplicate INTEGER, outOfOrder INTEGER, hops INTEGER, originator TEXT, json TEXT)').run();
-db.pragma('auto_vacuum = 1');
-db.pragma('cache_size = 20000');
 
 const Database = {
 
-  _addMessage:    db.prepare('INSERT INTO messages (timestamp, valid, duplicate, outOfOrder, hops, originator, json) VALUES (?, ?, ?, ?, ?, ?, ?)'),
-  _trimMessages:  db.prepare('DELETE FROM messages WHERE timestamp < ?'),
-  _total:         db.prepare('SELECT COUNT(*) FROM messages WHERE timestamp >= ? AND timestamp <= ?').pluck(),
-  _valid:         db.prepare('SELECT COUNT(*) FROM messages WHERE valid = 1 AND timestamp >= ? AND timestamp <= ?').pluck(),
-  _invalid:       db.prepare('SELECT COUNT(*) FROM messages WHERE valid = 0 AND duplicate = 0 AND timestamp >= ? AND timestamp <= ?').pluck(),
-  _duplicate:     db.prepare('SELECT COUNT(*) FROM messages WHERE duplicate = 1 AND timestamp >= ? AND timestamp <= ?').pluck(),
-  _outOfOrder:    db.prepare('SELECT COUNT(*) FROM messages WHERE outOfOrder = 1 AND timestamp >= ? AND timestamp <= ?').pluck(),
-  _maxHops:       db.prepare('SELECT MAX(hops) FROM messages WHERE valid = 1 AND timestamp >= ? AND timestamp <= ?').pluck(),
+  _messageTrim: {
+    age: 0,
+    often: 0,
+    last: Number.MAX_SAFE_INTEGER
+  },
 
-  addMessage(message) {
-    this._addMessage.run(
+  async open() {
+    this.db = await SQLite.open({
+      filename: 'state/olsr.db',
+      driver: SQLite3.cached.Database
+    });
+    if (Log.enabled) {
+      SQLite3.verbose();
+      this.db.on('trace', data => Log(data));
+    }
+    await this.db.exec('PRAGMA auto_vacuum = FULL');
+    await this.db.exec('PRAGMA cache_size = 20000');
+    await this.db.exec('PRAGMA synchronous = OFF');
+    await this.db.exec('PRAGMA journal_mode = MEMORY');
+    await this.db.exec('CREATE TABLE IF NOT EXISTS messages (timestamp INTEGER, valid INTEGER, duplicate INTEGER, outOfOrder INTEGER, hops INTEGER, originator TEXT, json TEXT)');
+    await this.db.exec('CREATE INDEX IF NOT EXISTS messages_timestamp ON messages (timestamp)');
+  },
+
+  async addMessage(message) {
+    this.db.run('INSERT INTO messages (timestamp, valid, duplicate, outOfOrder, hops, originator, json) VALUES (?, ?, ?, ?, ?, ?, ?)',
       message.timestamp,
       message.valid ? 1 : 0,
       message.duplicate ? 1 : 0,
@@ -30,40 +37,43 @@ const Database = {
       message.originator,
       JSON.stringify(message)
     );
-  },
-
-  setMessageTrim(ageSecs, oftenSecs) {
-    if (this._messageTrimTimer) {
-      clearInterval(this._messageTrimTimer);
+    // Trim messages periodically
+    const now = Date.now();
+    if (now > this._messageTrim.last) {
+      this._messageTrim.last = now + this._messageTrim.often;
+      this.db.run('DELETE FROM messages WHERE timestamp < ?', now - this._messageTrim.age);
     }
-    this._messageTrimTimer = setInterval(() => this._trimMessages.run(Date.now() - ageSecs * 1000), oftenSecs * 1000);
-    this._trimMessages.run(Date.now() - ageSecs * 1000);
   },
 
-  totalCount(from, to) {
-    return this._total.get(from, to);
+  setMessageTrim(age, often) {
+    this._messageTrim.age = age * 1000;
+    this._messageTrim.often = often * 1000;
+    this._messageTrim.last = 0;
   },
 
-  validCount(from, to) {
-    return this._valid.get(from, to);
+  async totalCount(from, to) {
+    return (await this.db.get('SELECT COUNT(*) FROM messages WHERE timestamp >= ? AND timestamp <= ?', from, to))['COUNT(*)'];
   },
 
-  invalidCount(from, to) {
-    return this._invalid.get(from, to);
+  async validCount(from, to) {
+    return (await this.db.get('SELECT COUNT(*) FROM messages WHERE valid = 1 AND timestamp >= ? AND timestamp <= ?', from, to))['COUNT(*)'];
   },
 
-  duplicateCount(from, to) {
-    return this._duplicate.get(from, to);
+  async invalidCount(from, to) {
+    return (await this.db.get('SELECT COUNT(*) FROM messages WHERE valid = 0 AND duplicate = 0 AND timestamp >= ? AND timestamp <= ?', from, to))['COUNT(*)'];
   },
 
-  outOfOrderCount(from, to) {
-    return this._outOfOrder.get(from, to);
+  async duplicateCount(from, to) {
+    return (await this.db.get('SELECT COUNT(*) FROM messages WHERE duplicate = 1 AND timestamp >= ? AND timestamp <= ?', from, to))['COUNT(*)'];
   },
 
-  maxHops(from, to) {
-    return this._maxHops.get(from, to);
+  async outOfOrderCount(from, to) {
+    return (await this.db.get('SELECT COUNT(*) FROM messages WHERE outOfOrder = 1 AND timestamp >= ? AND timestamp <= ?', from, to))['COUNT(*)'];
+  },
+
+  async maxHopCount(from, to) {
+    return (await this.db.get('SELECT MAX(hops) FROM messages WHERE valid = 1 AND timestamp >= ? AND timestamp <= ?', from, to))['MAX(hops)'];
   }
-
 };
 
 

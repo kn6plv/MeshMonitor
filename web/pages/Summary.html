@@ -1,5 +1,20 @@
 <div class="summary">
-  {{> ChartThumb id='a' data=(array 4 3 2 1) title='Messages' color='green' }}
-  {{> ChartThumb id='b' data=(array 1 2 1 2) title='Duplicates' color='blue' }}
-  {{> ChartThumb id='c' data=(array 1 2 3 2) title='Out of Order' color='red' }}
+  <div class="charts-title">5 Minutes</div>
+  <div class="charts">
+    {{#each chart5min}}
+    {{> ChartThumb }}
+    {{/each}}
+  </div>
+  <div class="charts-title">1 Hour</div>
+  <div class="charts">
+    {{#each chart1hour}}
+    {{> ChartThumb }}
+    {{/each}}
+  </div>
+  <div class="charts-title">1 Day</div>
+  <div class="charts">
+    {{#each chart1day}}
+    {{> ChartThumb }}
+    {{/each}}
+  </div>
 </div>

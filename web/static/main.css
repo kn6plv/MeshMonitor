@@ -1,9 +1,12 @@
-.summary {
+.summary .charts {
   display: flex;
+  padding-bottom: 20px;
 }
-
-.chart-thumb {
-  width: 200px;
-  height: 200px;
+.summary .charts-title {
+  font-size: 18px;
+}
+.summary .charts .chart-thumb {
+  width: 250px;
+  height: 250px;
   padding: 10px;
 }

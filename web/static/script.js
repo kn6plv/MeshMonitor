@@ -106,3 +106,37 @@ document.addEventListener('visibilitychange', () => {
     send('ui.visible', false);
   }
 });
+
+const visibleQ = [];
+window.whenVisible = (tick, callback) => {
+  const entry = {
+    tick: tick * 1000,
+    callback: callback,
+    timer: null,
+    exec: () => {
+      if (document.visibilityState === 'visible') {
+        entry.timer = setTimeout(entry.exec, entry.tick);
+        try {
+          entry.callback();
+        }
+        catch (e) {
+          console.error(e);
+        }
+      }
+      else {
+        entry.timer = 'pending';
+      }
+    }
+  };
+  visibleQ.push(entry);
+  entry.timer = setTimeout(entry.exec, entry.tick);
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    visibleQ.forEach(entry => {
+      if (entry.timer === 'pending') {
+        entry.exec();
+      }
+    });
+  }
+});
