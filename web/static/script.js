@@ -115,7 +115,7 @@ window.whenVisible = (tick, callback) => {
     timer: null,
     exec: () => {
       if (document.visibilityState === 'visible') {
-        entry.timer = setTimeout(entry.exec, entry.tick);
+        entry.timer = setTimeout(entry.exec, entry.tick - (Date.now() % entry.tick));
         try {
           entry.callback();
         }
@@ -129,7 +129,7 @@ window.whenVisible = (tick, callback) => {
     }
   };
   visibleQ.push(entry);
-  entry.timer = setTimeout(entry.exec, entry.tick);
+  entry.timer = setTimeout(entry.exec, entry.tick - (Date.now() % entry.tick));
 }
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
