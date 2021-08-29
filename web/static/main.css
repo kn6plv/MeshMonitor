@@ -1,3 +1,7 @@
+.summary {
+  height: 100%;
+  overflow-y: scroll;
+}
 .summary .charts {
   display: flex;
   padding-bottom: 20px;
