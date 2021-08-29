@@ -25,11 +25,21 @@
           },
           y: {
             suggestedMin: 0,
-            {{#if adjustY}}
-            beforeUpdate: (ctx) => {
-              ctx._userMax = Math.ceil(ctx.end / {{adjustY}}) * {{adjustY}};
+            suggestedMax: {{adjustY}}
+          }
+        },
+        plugins: {
+          tooltip: {
+            callbacks: {
+              title: ctx => {
+                return `${ {{units.scale}} * ({{nrlabels}} - 1 - ctx[0].dataIndex)} {{units.label}} Ago`;
+              },
+              labelColor: ctx => {
+                return {
+                  backgroundColor: '{{color}}'
+                }
+              }
             }
-            {{/if}}
           }
         }
       }
@@ -43,8 +53,10 @@
       }
       chart.update();
     }
+    let lastUpdate = Date.now();
     whenVisible({{step}}, () => {
-      send('chart.update.request', '{{id}}');
+      send('chart.update.request', { id: '{{id}}', last: lastUpdate });
+      lastUpdate = Date.now();
     });
     chart.update();
   })();
