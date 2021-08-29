@@ -27,7 +27,7 @@ class OLSR extends Emitter {
 
   incomingMessage(msg) {
     const len = msg.readUInt16BE(0);
-    //const seqnr = msg.readUInt16BE(2);
+    const pktseqnr = msg.readUInt16BE(2);
 
     if (len != msg.length) {
       Log('Bad message length: specified:', len, 'actual:', msg.length);
@@ -53,6 +53,7 @@ class OLSR extends Emitter {
 
       const message = Object.assign({
         timestamp: Date.now(),
+        pktseqnr: pktseqnr,
         type: MSG_NAMES[msgtype] || `<${msgtype}>`,
         originator: originator,
         ttl: ttl,

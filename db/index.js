@@ -24,23 +24,34 @@ const Database = {
     await this.db.exec('PRAGMA synchronous = OFF');
     await this.db.exec('PRAGMA journal_mode = MEMORY');
 
-    await this.db.exec('CREATE TABLE IF NOT EXISTS message (timestamp INTEGER, originator TEXT, json TEXT)');
+    await this.db.exec('CREATE TABLE IF NOT EXISTS message (timestamp INTEGER, pktseqnr INTEGER, originator TEXT, valid INTEGER, duplicate INTEGER, outOfOrder INTEGER, maxHop INTEGER, ttl INTEGER, seqnr INTEGER, type TEXT, json TEXT)');
     await this.db.exec('CREATE TABLE IF NOT EXISTS messageSummary (timestamp INTEGER, valid INTEGER, duplicate INTEGER, outOfOrder INTEGER, maxHop INTEGER, originator TEXT)');
-    await this.db.exec('CREATE TABLE IF NOT EXISTS messageSummaryMessage(timestamp INTEGER, sid INTEGER UNIQUE, mid INTEGER UNIQUE)');
     await this.db.exec('CREATE TABLE IF NOT EXISTS messageHourlySummary (timestamp INTEGER, valid INTEGER, duplicate INTEGER, outOfOrder INTEGER, maxHop INTEGER)');
 
     await this.db.exec('CREATE INDEX IF NOT EXISTS messageTimestamp ON message (timestamp)');
     await this.db.exec('CREATE INDEX IF NOT EXISTS messageSummaryTimestamp ON messageSummary (timestamp)');
-    await this.db.exec('CREATE INDEX IF NOT EXISTS messageSummaryMessageTimestamp ON messageSummaryMessage (timestamp)');
     await this.db.exec('CREATE INDEX IF NOT EXISTS messageHourlySummaryTimestamp ON messageHourlySummary (timestamp)');
   },
 
   async addMessage(message) {
     const [ m, s ] = await Promise.all([
-      this.db.run('INSERT INTO message (timestamp, originator, json) VALUES(:timestamp, :originator, :json)', { ':timestamp': message.timestamp, ':originator': message.originator, ':json': JSON.stringify(message) }),
+      this.db.run('INSERT INTO message (timestamp, pktseqnr, originator, valid, duplicate, outOfOrder, maxHop, ttl, seqnr, type, json) VALUES(:timestamp, :pktseqnr, :originator, :valid, :duplicate, :outOfOrder, :maxHop, :ttl, :seqnr, :type, :json)',
+        {
+          ':timestamp': message.timestamp,
+          ':pktseqnr': message.pktseqnr,
+          ':originator': message.originator,
+          ':valid': message.valid,
+          ':duplicate': message.duplicate,
+          ':outOfOrder': message.outOfOrder,
+          ':maxHop': message.maxHop,
+          ':ttl': message.ttl,
+          ':seqnr': message.seqnr,
+          ':type': message.type,
+          ':json': JSON.stringify(message)
+        }
+      ),
       this.db.run('INSERT INTO messageSummary (timestamp, valid, duplicate, outOfOrder, maxHop, originator) VALUES (:timestamp, :valid, :duplicate, :outOfOrder, :maxHop, :originator)', { ':timestamp': message.timestamp, ':valid': message.valid, ':duplicate': message.duplicate, ':outOfOrder': message.outOfOrder, ':maxHop': message.maxHop, ':originator': message.originator })
     ]);
-    await this.db.exec('INSERT INTO messageSummaryMessage (timestamp, sid, mid) VALUES (:timestamp, :sid, :mid)', { ':timestamp': message.timestamp, ':sid': s.lastID, ':mid': m.lastID });
 
     // Trim messages periodically
     const now = Date.now();
@@ -50,7 +61,6 @@ const Database = {
       await Promise.all([
         this.db.exec('DELETE FROM message WHERE timestamp < :timestamp', when),
         this.db.exec('DELETE FROM messageSummary WHERE timestamp < :timestamp', when),
-        this.db.exec('DELETE FROM messageSummaryMessage WHERE timestamp < :timestamp', when),
         this.db.exec('DELETE FROM messageHourlySummary WHERE timestamp < :timestamp', when)
       ]);
     }
