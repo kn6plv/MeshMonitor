@@ -46,14 +46,19 @@ class Summary extends Page {
     for (; from < to; from += step) {
       data.push(Math.round(await DB[config.key](from, from + step) / config.scale));
     }
+    const cache = {};
     this.updates[config.id] = async (msg) => {
-      const ndata = [];
       const to = step * Math.floor(Date.now() / step);
       let from = step * Math.floor(msg.value.last / step);
-      for (; from < to; from += step) {
-        ndata.push(Math.round(await DB[config.key](from, from + step) / config.scale));
+      if (cache.from !== from || cache.to !== to) {
+        cache.from = from;
+        cache.to = to;
+        cache.data = [];
+        for (; from < to; from += step) {
+          cache.data.push(Math.round(await DB[config.key](from, from + step) / config.scale));
+        }
       }
-      this.send(`chart.update.response.${config.id}`, { data: ndata });
+      this.send(`chart.update.response.${config.id}`, { data: cache.data });
     }
     return Object.assign(config, { data: data, nrlabels: config.labels.length, labels: JSON.stringify(config.labels) });
   }
@@ -67,13 +72,17 @@ class Summary extends Page {
       data.push(Math.round((await DB.messageSummary(from + step))[config.key] / config.scale));
     }
     this.updates[config.id] = async (msg) => {
-      const ndata = [];
       const to = step * Math.floor(Date.now() / step);
       let from = step * Math.floor(msg.value.last / step);
-      for (; from < to; from += step) {
-        ndata.push(Math.round((await DB.messageSummary(from + step))[config.key] / config.scale));
+      if (cache.from !== from || cache.to !== to) {
+        cache.from = from;
+        cache.to = to;
+        cache.data = [];
+        for (; from < to; from += step) {
+          cache.data.push(Math.round((await DB.messageSummary(from + step))[config.key] / config.scale));
+        }
       }
-      this.send(`chart.update.response.${config.id}`, { data: ndata });
+      this.send(`chart.update.response.${config.id}`, { data: cache.data });
     }
     return Object.assign(config, { data: data, nrlabels: config.labels.length, labels: JSON.stringify(config.labels) });
   }
