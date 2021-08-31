@@ -108,16 +108,24 @@ document.addEventListener('visibilitychange', () => {
 });
 
 const visibleQ = [];
-window.whenVisible = (tick, callback) => {
+window.whenVisible = (id, tick, callback) => {
+  (new MutationObserver(() => {
+    clearTimeout(entry.timer);
+  })).observe(document.getElementById(id), { childList: true });
+  const now = Date.now();
   const entry = {
     tick: tick * 1000,
     callback: callback,
     timer: null,
+    last: now,
     exec: () => {
       if (document.visibilityState === 'visible') {
-        entry.timer = setTimeout(entry.exec, entry.tick - (Date.now() % entry.tick));
+        const now = Date.now();
+        const delay = now - entry.last;
+        entry.last = now;
+        entry.timer = setTimeout(entry.exec, entry.tick - (entry.last % entry.tick));
         try {
-          entry.callback();
+          entry.callback(delay);
         }
         catch (e) {
           console.error(e);
@@ -129,7 +137,7 @@ window.whenVisible = (tick, callback) => {
     }
   };
   visibleQ.push(entry);
-  entry.timer = setTimeout(entry.exec, entry.tick - (Date.now() % entry.tick));
+  entry.timer = setTimeout(entry.exec, entry.tick - (entry.last % entry.tick));
 }
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
