@@ -262,4 +262,13 @@ class OLSR extends Emitter {
 
 }
 
-module.exports = OLSR;
+let instance = null;
+
+module.exports = {
+  getInstance(portnr) {
+    if (!instance) {
+      instance = new OLSR(portnr);
+    }
+    return instance;
+  }
+};

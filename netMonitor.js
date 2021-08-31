@@ -12,7 +12,7 @@ const TRIM_AGE = 60 * 60 * 24 + 2 * TRIM_OFTEN;
   await DB.open();
   DB.setMessageTrim(TRIM_AGE, TRIM_OFTEN);
 
-  const dev = new OLSR();
+  const dev = OLSR.getInstance();
   dev.on('message', async m => {
     Log(JSON.stringify(m, null, 2));
     await DB.addMessage(m);
