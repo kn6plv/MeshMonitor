@@ -1,7 +1,9 @@
 const Template = require('./Template');
+const Log = require('debug')('ui');
+
 const Side = require('./Side');
 const Summary = require('./Summary');
-const Log = require('debug')('ui');
+const PerNode = require('./PerNode');
 
 async function HTML(ctx) {
   Template.load();
@@ -35,7 +37,8 @@ async function WS(ctx) {
   };
   State.side = new Side(State);
   State.tabs = {
-    summary: new Summary(State)
+    summary: new Summary(State),
+    pernode: new PerNode(State),
   };
   State.current = State.tabs.summary,
   State.side.select();
@@ -95,15 +98,15 @@ async function WS(ctx) {
       return;
     }
     if (tab !== State.current) {
-      Log('deselect:');
+      Log('deselect:', State.current.constructor.name);
       await State.current.deselect();
       State.current = tab;
       send('page.change', msg.value);
-      Log('select:');
+      Log('select:', State.current.constructor.name);
       await State.current.select();
     }
     else {
-      Log('reselect:');
+      Log('reselect:', State.current.constructor.name);
       await State.current.reselect();
     }
     if (tabset[1]) {
