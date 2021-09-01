@@ -1,3 +1,11 @@
+#side .section {
+  padding: 5px;
+}
+#side .section .item {
+  color: var(--main-text-color);
+  text-decoration: none;
+}
+
 .summary {
   height: 100%;
   overflow-y: scroll;
@@ -19,4 +27,20 @@
 .per-node {
   height: 100%;
   overflow-y: scroll;
+}
+.per-node .chart-nodes {
+  xwidth: 1000px;
+  height: 400px;
+}
+
+
+.node {
+  height: 100%;
+  overflow-y: scroll;
+}
+.node .chart-select {
+  padding: 20px;
+}
+.node .chart-node {
+  height: 400px;
 }
