@@ -7,7 +7,9 @@ const Pages = {
   '/':                  { fn: Main.HTML },
   '/ws':                { fn: Main.WS },
   '/js/script.js':      { path: `${__dirname}/static/script.js`, type: 'text/javascript' },
-  '/js/chart.js':       { path: `${__dirname}/../node_modules/chart.js/dist/chart.min.js`, type: 'text/css' },
+  '/js/chart.js':       { path: `${__dirname}/../node_modules/chart.js/dist/chart.min.js`, type: 'text/javascript' },
+  '/js/moment.js':      { path: `${__dirname}/../node_modules/moment/moment.js`, type: 'text/javascript' },
+  '/js/chartjs-adapter-moment.js': { path: `${__dirname}/../node_modules/chartjs-adapter-moment/dist/chartjs-adapter-moment.min.js`, type: 'text/javascript' },
   '/css/general.css':   { path: `${__dirname}/static/general.css`, type: 'text/css' },
   '/css/main.css':      { path: `${__dirname}/static/main.css`, type: 'text/css' },
 };
