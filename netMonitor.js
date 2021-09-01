@@ -4,8 +4,8 @@ const DB = require('./db');
 
 const HOUR1 = 60 * 60 * 1000;
 
-const TRIM_OFTEN = 5 * 60;
-const TRIM_AGE = 60 * 60 * 24 + 2 * TRIM_OFTEN;
+const TRIM_OFTEN = 60 * 60;
+const TRIM_AGE = 60 * 60 * 24 * 7 + 2 * TRIM_OFTEN;
 
 (async () => {
 
