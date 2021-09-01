@@ -7,68 +7,9 @@
     </select>
   </div>
   <div class="chart-node">
-  <canvas id="{{id}}"></canvas>
-  <script>
-  (function(){
-    const chart = new Chart(document.getElementById('{{id}}'), {
-      type: 'scatter',
-      data: {
-        labels: [],
-        datasets: [{
-          backgroundColor: 'red',
-          borderWidth: 0,
-          data: [
-            {{#each data}}
-            { x:{{x}},y:{{y}} },
-            {{/each}}
-          ],
-          pointBackgroundColor: [
-            {{#each color}}
-            '{{this}}',
-            {{/each}}
-          ]
-        }]
-      },
-      options: {
-        clip: 20,
-        scales: {
-          x: {
-            type: 'time'
-          },
-          y: {
-            title: {
-              display: true,
-              text: 'Sequence Nr',
-            },
-            min: 0,
-            max: 65535
-          }
-        },
-        plugins: {
-          legend: {
-            display: false
-          }
-        }
-      }
-    });
-    let cursor = {{cursor}};
-    onMessage['chart.update.response.{{id}}'] = msg => {
-      const ndata = msg.value.data;
-      const ncolor = msg.value.color;
-      const data = chart.data.datasets[0].data;
-      const color = chart.data.datasets[0].pointBackgroundColor;
-      for (let i = 0; i < ndata.length; i++) {
-        data.shift();
-        color.shift();
-        data.push(ndata[i]);
-        color.push(ncolor[i]);
-      }
-      chart.update();
-      cursor = msg.value.cursor;
-    }
-    whenVisible('info', {{step}}, () => {
-      send('chart.update.request', { id: '{{id}}', cursor });
-    });
-  })();
-  </script>
+    {{> ChartNode }}
+  </div>
+  <div class="chart-scrub">
+    <input type="range" min="0" max="1007" value="1007" step="1" onchange="send('chart.position.change', { id: '{{id}}', position: parseInt(event.target.value) })">
+  </div>
 </div>
