@@ -83,27 +83,27 @@ const Database = {
   },
 
   async totalCount(from, to) {
-    return (await this.db.get('SELECT COUNT(*) FROM messageSummary WHERE timestamp >= ? AND timestamp <= ?', from, to))['COUNT(*)'];
+    return (await this.db.get('SELECT COUNT(*) FROM messageSummary WHERE timestamp BETWEEN ? AND ?', from, to))['COUNT(*)'];
   },
 
   async validCount(from, to) {
-    return (await this.db.get('SELECT COUNT(*) FROM messageSummary WHERE valid = 1 AND timestamp >= ? AND timestamp <= ?', from, to))['COUNT(*)'];
+    return (await this.db.get('SELECT COUNT(*) FROM messageSummary WHERE valid = 1 AND timestamp BETWEEN ? AND ?', from, to))['COUNT(*)'];
   },
 
   async invalidCount(from, to) {
-    return (await this.db.get('SELECT COUNT(*) FROM messageSummary WHERE valid = 0 AND duplicate = 0 AND timestamp >= ? AND timestamp <= ?', from, to))['COUNT(*)'];
+    return (await this.db.get('SELECT COUNT(*) FROM messageSummary WHERE valid = 0 AND duplicate = 0 AND timestamp BETWEEN ? AND ?', from, to))['COUNT(*)'];
   },
 
   async duplicateCount(from, to) {
-    return (await this.db.get('SELECT COUNT(*) FROM messageSummary WHERE duplicate = 1 AND timestamp >= ? AND timestamp <= ?', from, to))['COUNT(*)'];
+    return (await this.db.get('SELECT COUNT(*) FROM messageSummary WHERE duplicate = 1 AND timestamp BETWEEN ? AND ?', from, to))['COUNT(*)'];
   },
 
   async outOfOrderCount(from, to) {
-    return (await this.db.get('SELECT COUNT(*) FROM messageSummary WHERE outOfOrder = 1 AND timestamp >= ? AND timestamp <= ?', from, to))['COUNT(*)'];
+    return (await this.db.get('SELECT COUNT(*) FROM messageSummary WHERE outOfOrder = 1 AND timestamp BETWEEN ? AND ?', from, to))['COUNT(*)'];
   },
 
   async maxHopCount(from, to) {
-    return (await this.db.get('SELECT MAX(maxHop) FROM messageSummary WHERE valid = 1 AND timestamp >= ? AND timestamp <= ?', from, to))['MAX(maxHop)'];
+    return (await this.db.get('SELECT MAX(maxHop) FROM messageSummary WHERE valid = 1 AND timestamp BETWEEN ? AND ?', from, to))['MAX(maxHop)'];
   },
 
   async messageSummary(from) {
@@ -111,11 +111,11 @@ const Database = {
   },
 
   async getMessageGroup(from, to) {
-    return await this.db.all('SELECT originator, valid, duplicate, outOfOrder, maxHop FROM messageSummary WHERE timestamp >= ? AND timestamp <= ?', from, to);
+    return await this.db.all('SELECT originator, valid, duplicate, outOfOrder, maxHop FROM messageSummary WHERE timestamp BETWEEN ? AND ?', from, to);
   },
 
   async getSequenceNrs(originator, from, to) {
-    return await this.db.all('SELECT originator, timestamp, seqnr, maxHop FROM message WHERE originator = ? AND timestamp >= ? AND timestamp <= ?', originator, from, to);
+    return await this.db.all('SELECT originator, timestamp, seqnr, maxHop FROM message WHERE originator = ? AND timestamp BETWEEN ? AND ?', originator, from, to);
   }
 };
 
