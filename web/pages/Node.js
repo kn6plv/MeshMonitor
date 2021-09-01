@@ -32,7 +32,8 @@ class Node extends Page {
       id: `node_${++graphId}`,
       originator: sortedNames[0].address,
       start: Date.now() - TIME * 1000,
-      duration: TIME * 1000
+      duration: TIME * 1000,
+      position: SCRUB_RANGE
     };
 
     if (arg && arg.address) {
@@ -47,6 +48,7 @@ class Node extends Page {
       }
       if (arg.timestamp) {
         config.start = HOUR1 * Math.floor(arg.timestamp / HOUR1) - HOUR1;
+        config.position = SCRUB_RANGE - ((Date.now() - config.start) / 1000 - TIME) / SCRUB_STEP;
       }
       if (arg.duration) {
         config.duration = arg.duration * 1000;
@@ -82,28 +84,26 @@ class Node extends Page {
           ));
           break;
         case 'position':
-          const offset = SCRUB_RANGE - msg.value.position;
-          config.start = Date.now() - (TIME + offset * SCRUB_STEP) * 1000;
+          config.position = msg.value.position;
+          config.start = Date.now() - (TIME - (config.position - SCRUB_RANGE) * SCRUB_STEP) * 1000;
           this.send(`chart.update.response.${config.id}`, Object.assign(
-            { update: false, live: offset === 0 },
+            { update: false, live: config.position >= SCRUB_RANGE },
             await gen(config.start, config.start + config.duration)
           ));
           break;
         case 'change':
         default:
           config.originator = msg.value.address;
-          const position = SCRUB_RANGE - ((Date.now() - config.start) / 1000 - TIME) / SCRUB_STEP;
           this.html('info', this.template.Node(Object.assign(
-            { id: config.id, selected: config.originator, nodes: sortedNames, step: config.duration / SAMPLES, maxposition: SCRUB_RANGE, position: position, live: config.start + config.duration >= Date.now() },
+            { id: config.id, selected: config.originator, nodes: sortedNames, step: config.duration / SAMPLES / 1000, maxposition: SCRUB_RANGE, position: config.position, live: config.position >= SCRUB_RANGE },
             await gen(config.start, config.start + config.duration))
           ));
           break;
       }
     }
 
-    const position = SCRUB_RANGE - ((Date.now() - config.start) / 1000 - TIME) / SCRUB_STEP;
     this.html('info', this.template.Node(Object.assign(
-      { id: config.id, selected: config.originator, nodes: sortedNames, step: config.duration / SAMPLES, maxposition: SCRUB_RANGE, position: position, live: config.start + config.duration >= Date.now() },
+      { id: config.id, selected: config.originator, nodes: sortedNames, step: config.duration / SAMPLES / 1000, maxposition: SCRUB_RANGE, position: config.position, live: config.position >= SCRUB_RANGE },
       await gen(config.start, config.start + config.duration))
     ));
   }
