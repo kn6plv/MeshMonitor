@@ -108,6 +108,14 @@ const Database = {
 
   async messageSummary(from) {
     return (await this.db.get('SELECT * FROM messageHourlySummary WHERE timestamp = ?', from)) || {};
+  },
+
+  async getMessageGroup(from, to) {
+    return await this.db.all('SELECT originator, valid, duplicate, outOfOrder, maxHop FROM messageSummary WHERE timestamp >= ? AND timestamp <= ?', from, to);
+  },
+
+  async getSequenceNrs(originator, from, to) {
+    return await this.db.all('SELECT originator, timestamp, seqnr, maxHop FROM message WHERE originator = ? AND timestamp >= ? AND timestamp <= ?', originator, from, to);
   }
 };
 
