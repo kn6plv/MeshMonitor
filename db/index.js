@@ -110,12 +110,22 @@ const Database = {
     return (await this.db.get('SELECT * FROM messageHourlySummary WHERE timestamp = ?', from)) || {};
   },
 
-  async getMessageGroup(from, to) {
-    return await this.db.all('SELECT originator, valid, duplicate, outOfOrder, maxHop FROM messageSummary WHERE timestamp BETWEEN ? AND ?', from, to);
+  async getMessageGroup(from, to, samples) {
+    const count = 8 * (await this.db.get('SELECT COUNT(*) FROM messageSummary WHERE timestamp BETWEEN ? AND ? AND ROWID % 8 = 0', from, to))['COUNT(*)'];
+    const decimation = Math.min(10, Math.ceil(count / samples));
+    return {
+      decimation: decimation,
+      samples: await this.db.all('SELECT originator, valid, duplicate, outOfOrder, maxHop FROM messageSummary WHERE timestamp BETWEEN ? AND ? AND ROWID % ? = 0', from, to, decimation)
+    };
   },
 
-  async getSequenceNrs(originator, from, to) {
-    return await this.db.all('SELECT originator, timestamp, seqnr, maxHop FROM message WHERE originator = ? AND timestamp BETWEEN ? AND ?', originator, from, to);
+  async getSequenceNrs(originator, from, to, samples) {
+    const count = 8 * (await this.db.get('SELECT COUNT(*) FROM message WHERE originator = ? AND timestamp BETWEEN ? AND ? AND ROWID % 8 = 0', originator, from, to))['COUNT(*)'];
+    const decimation = Math.min(10, Math.ceil(count / samples));
+    return {
+      decimation: decimation,
+      samples: await this.db.all('SELECT originator, timestamp, seqnr, maxHop FROM message WHERE originator = ? AND timestamp BETWEEN ? AND ? AND timestamp % ? = 0', originator, from, to, decimation)
+    };
   }
 };
 

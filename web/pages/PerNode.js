@@ -3,6 +3,7 @@ const DB = require('../../db');
 const Moment = require('moment');
 const NameService = require('../../nameService');
 
+const SAMPLES = 500;
 const SCRUB_RANGE = 1007;
 const SCRUB_STEP = 10 * 60;
 const STEP = 10 * 60;
@@ -23,11 +24,12 @@ class PerNode extends Page {
     const gen = async (from, to) => {
       lastFrom = from;
       const nodes = {};
-      (await DB.getMessageGroup(from, to)).forEach(entry => {
+      const results = await DB.getMessageGroup(from, to, SAMPLES);
+      results.samples.forEach(entry => {
         const node = nodes[entry.originator] || (nodes[entry.originator] = { originator: NameService.lookupNameByIP(entry.originator) || entry.originator, address: entry.originator, valid: 0, duplicate: 0, outOfOrder: 0, maxHop: 0, minHop: Number.MAX_SAFE_INTEGER });
-        node.valid += entry.valid;
-        node.duplicate += entry.duplicate;
-        node.outOfOrder += entry.outOfOrder;
+        node.valid += entry.valid * results.decimation;
+        node.duplicate += entry.duplicate * results.decimation;
+        node.outOfOrder += entry.outOfOrder * results.decimation;
         node.maxHop = Math.max(node.maxHop, entry.maxHop);
         node.minHop = Math.min(node.minHop, entry.maxHop);
       });

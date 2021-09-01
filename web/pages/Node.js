@@ -9,7 +9,7 @@ const HOUR1 = 60 * 60 * 1000;
 const TIME = 61 * 60;
 const SCRUB_RANGE = 1007;
 const SCRUB_STEP = 10 * 60;
-const DECIMATION = 500;
+const SAMPLES = 500;
 
 const graphUpdateCache = {};
 let graphId = 1;
@@ -62,9 +62,9 @@ class Node extends Page {
         cache.color = [];
         cache.date = Moment(from).format('MMMM Do');
         let last = 0;
-        (await DB.getSequenceNrs(config.originator, from, to)).forEach((point, idx) => {
+        (await DB.getSequenceNrs(config.originator, from, to, SAMPLES)).samples.forEach((point, idx) => {
           if (point.timestamp >= last) {
-            last = point.timestamp + config.duration / DECIMATION;
+            last = point.timestamp + config.duration / SAMPLES;
             cache.data.push({ x: point.timestamp, y: point.seqnr });
             cache.color.push(this.gradient.colorAt(point.maxHop));
           }
@@ -94,7 +94,7 @@ class Node extends Page {
           config.originator = msg.value.address;
           const position = SCRUB_RANGE - ((Date.now() - config.start) / 1000 - TIME) / SCRUB_STEP;
           this.html('info', this.template.Node(Object.assign(
-            { id: config.id, selected: config.originator, nodes: sortedNames, step: config.duration / DECIMATION, maxposition: SCRUB_RANGE, position: position, live: config.start + config.duration >= Date.now() },
+            { id: config.id, selected: config.originator, nodes: sortedNames, step: config.duration / SAMPLES, maxposition: SCRUB_RANGE, position: position, live: config.start + config.duration >= Date.now() },
             await gen(config.start, config.start + config.duration))
           ));
           break;
@@ -103,7 +103,7 @@ class Node extends Page {
 
     const position = SCRUB_RANGE - ((Date.now() - config.start) / 1000 - TIME) / SCRUB_STEP;
     this.html('info', this.template.Node(Object.assign(
-      { id: config.id, selected: config.originator, nodes: sortedNames, step: config.duration / DECIMATION, maxposition: SCRUB_RANGE, position: position, live: config.start + config.duration >= Date.now() },
+      { id: config.id, selected: config.originator, nodes: sortedNames, step: config.duration / SAMPLES, maxposition: SCRUB_RANGE, position: position, live: config.start + config.duration >= Date.now() },
       await gen(config.start, config.start + config.duration))
     ));
   }
