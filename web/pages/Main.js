@@ -105,12 +105,12 @@ async function WS(ctx) {
       await State.current.deselect();
       State.current = tab;
       send('page.change', msg.value);
-      Log('select:', State.current.constructor.name);
-      await State.current.select();
+      Log('select:', State.current.constructor.name, msg.arg);
+      await State.current.select(msg.arg);
     }
     else {
-      Log('reselect:', State.current.constructor.name);
-      await State.current.reselect();
+      Log('reselect:', State.current.constructor.name, msg.arg);
+      await State.current.reselect(msg.arg);
     }
     if (tabset[1]) {
       Log('tabset:', tabset.slice(1).join('.'));
