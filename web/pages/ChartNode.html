@@ -48,7 +48,7 @@
     }
   });
   let cursor = {{cursor}};
-  let live = true;
+  let live = {{live}};
   onMessage['chart.update.response.{{id}}'] = msg => {
     const ndata = msg.value.data;
     const ncolor = msg.value.color;

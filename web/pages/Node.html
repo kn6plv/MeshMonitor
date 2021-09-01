@@ -10,6 +10,6 @@
     {{> ChartNode }}
   </div>
   <div class="chart-scrub">
-    <input type="range" min="0" max="1007" value="1007" step="1" onchange="send('chart.position.change', { id: '{{id}}', position: parseInt(event.target.value) })">
+    <input type="range" min="0" max="1007" value="{{position}}" step="1" onchange="send('chart.position.change', { id: '{{id}}', position: parseInt(event.target.value) })">
   </div>
 </div>
