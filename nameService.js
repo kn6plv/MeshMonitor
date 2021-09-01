@@ -4,17 +4,39 @@ const names = {};
 
 const dev = OLSR.getInstance();
 dev.on('message', async m => {
-  if (m.type === 'NS') {
-    m.names.forEach(name => {
-      if (name.address) {
-        names[name.address] = name.name;
-      }
-    });
+  switch (m.type) {
+    case 'NS':
+      m.names.forEach(name => {
+        if (name.address) {
+          names[name.address] = {
+            originator: m.originator,
+            address: name.address,
+            name: name.name
+          };
+        }
+      });
+      break;
+    default:
+      break;
   }
 });
 
 module.exports = {
-  lookupNameByIP(ip) {
-    return names[ip];
+  lookupNameByIP(address) {
+    const entry = names[address];
+    if (entry && entry.name) {
+      return entry.name;
+    }
+    return null;
+  },
+
+  getAllOriginators() {
+    const all = {};
+    for (let address in names) {
+      if (names[address].originator === address) {
+        all[address] = names[address];
+      }
+    }
+    return all;
   }
 };
