@@ -16,9 +16,9 @@
               {
                 label: '{{label}}',
                 data: [ {{data}} ],
-                {{#if (eq label 'outOfOrder')}}
+                {{#if (eq label 'Out Of Order')}}
                 backgroundColor: 'red',
-                {{else if (eq label 'duplicate')}}
+                {{else if (eq label 'Duplicate')}}
                 backgroundColor: 'blue',
                 {{else}}
                 backgroundColor: 'green',
@@ -28,21 +28,46 @@
           ]
         },
         options: {
+          maintainAspectRatio: false,
           scales: {
             x: {
               stacked: true,
+              title: {
+                display: true,
+                text: '{{date}}'
+              },
               ticks: {
                 font: { size: 10 }
               }
             },
             y: {
-              stacked: true
+              stacked: true,
+              title: {
+                display: true,
+                text: 'Messages Per Second'
+              }
             }
           },
           onClick: (event, info, chart) => send('chart.node.select', { id: '{{id}}', idx: info[0].index })
         }
       });
+      onMessage['chart.position.update.{{id}}'] = msg => {
+        chart.data.labels = msg.value.labels;
+        const datasets = chart.data.datasets;
+        for (let i = 0; i < datasets.length; i++) {
+          datasets[i].data.length = 0;
+        }
+        chart.update();
+        for (let i = 0; i < datasets.length; i++) {
+          datasets[i].data.push(...msg.value.datasets[i].data);
+        }
+        chart.options.scales.x.title.text = msg.value.date;
+        chart.update();
+      }
     })();
     </script>
+  </div>
+  <div class="chart-nodes-scrub">
+    <input type="range" min="0" max="1007" value="1007" step="1" onchange="send('chart.position.change', { id: '{{id}}', position: parseInt(event.target.value) })">
   </div>
 </div>
