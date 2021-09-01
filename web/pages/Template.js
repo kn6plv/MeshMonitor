@@ -78,7 +78,7 @@ Handlebars.registerHelper({
   concat: function() {
     return String.prototype.concat.apply("", Array.prototype.slice.call(arguments, 0, -1));
   },
-  date: function(d) {
+  todate: function(d) {
     return new Date(d).toDateString()
   },
   now: function() {
