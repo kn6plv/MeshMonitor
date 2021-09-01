@@ -7,9 +7,11 @@ class Side extends Page {
   }
 
   async select() {
+    super.select();
   }
 
   async deselect() {
+    super.deselect();
   }
 
 }
