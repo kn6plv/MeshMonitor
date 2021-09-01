@@ -1,46 +1,48 @@
 <div class="per-node">
   <div class="chart-nodes">
-  <canvas id="{{id}}" width="2" height="1"></canvas>
-  <script>
-  (function(){
-    const chart = new Chart(document.getElementById('{{id}}'), {
-      type: 'bar',
-      data: {
-        labels: [
-          {{#each labels}}
-            '{{this}}',
-          {{/each}}
-        ],
-        datasets: [
-          {{#each datasets}}
-            {
-              label: '{{label}}',
-              data: [ {{data}} ],
-              {{#if (eq label 'outOfOrder')}}
-              backgroundColor: 'red',
-              {{else if (eq label 'duplicate')}}
-              backgroundColor: 'blue',
-              {{else}}
-              backgroundColor: 'green',
-              {{/if}}
+    <canvas id="{{id}}"></canvas>
+    <script>
+    (function(){
+      const chart = new Chart(document.getElementById('{{id}}'), {
+        type: 'bar',
+        data: {
+          labels: [
+            {{#each labels}}
+              '{{this}}',
+            {{/each}}
+          ],
+          datasets: [
+            {{#each datasets}}
+              {
+                label: '{{label}}',
+                data: [ {{data}} ],
+                {{#if (eq label 'outOfOrder')}}
+                backgroundColor: 'red',
+                {{else if (eq label 'duplicate')}}
+                backgroundColor: 'blue',
+                {{else}}
+                backgroundColor: 'green',
+                {{/if}}
+              },
+            {{/each}}
+          ]
+        },
+        options: {
+          scales: {
+            x: {
+              stacked: true,
+              ticks: {
+                font: { size: 10 }
+              }
             },
-          {{/each}}
-        ]
-      },
-      options: {
-        scales: {
-          x: {
-            stacked: true,
-            ticks: {
-              font: { size: 10 }
+            y: {
+              stacked: true
             }
           },
-          y: {
-            stacked: true
-          }
+          onClick: (event, info, chart) => send('chart.node.select', { id: '{{id}}', idx: info[0].index })
         }
-      }
-    });
-  })();
-  </script>
+      });
+    })();
+    </script>
+  </div>
 </div>
