@@ -53,6 +53,7 @@ body {
 }
 .body .col {
   width: 210px;
+  min-width: 210px;
   white-space: nowrap;
   overflow-x: hidden;
   padding: 10px;

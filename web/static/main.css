@@ -29,7 +29,6 @@
   overflow-y: scroll;
 }
 .per-node .chart-nodes {
-  xwidth: 1000px;
   height: 400px;
 }
 
@@ -41,6 +40,15 @@
 .node .chart-select {
   padding: 20px;
 }
+.node .chart-select select {
+  -webkit-appearance: none;
+  outline: none;
+  background: var(--main-background-color);
+  border: 1px solid var(--property-border-color);
+  border-radius: 15px;
+  color: var(--main-text-color);
+  padding: 5px 0 5px 10px;
+}
 .node .chart-node {
-  height: 400px;
+  height: 50%;
 }
