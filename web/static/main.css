@@ -47,11 +47,10 @@
   height: 100%;
 }
 .per-node .chart-nodes {
-  height: 0;
   flex: 1;
 }
 .per-node .chart-nodes-scrub {
-  flex: 0;
+  outline: none;
 }
 .per-node .chart-nodes-scrub input {
   width: 100%;
@@ -83,6 +82,7 @@
 }
 .node .chart-scrub {
   padding: 20px 0 20px 50px;
+  outline: none;
 }
 .node .chart-scrub input {
   width: 100%;

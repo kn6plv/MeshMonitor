@@ -9,7 +9,6 @@ const HOUR1 = 60 * 60 * 1000;
 const TIME = 61 * 60;
 const SCRUB_RANGE = 1007;
 const SCRUB_STEP = 10 * 60;
-const STEP = 10;
 const DECIMATION = 500;
 
 const graphUpdateCache = {};
@@ -95,7 +94,7 @@ class Node extends Page {
           config.originator = msg.value.address;
           const position = SCRUB_RANGE - ((Date.now() - config.start) / 1000 - TIME) / SCRUB_STEP;
           this.html('info', this.template.Node(Object.assign(
-            { id: config.id, selected: config.originator, nodes: sortedNames, step: STEP, position: position, live: config.start + config.duration >= Date.now() },
+            { id: config.id, selected: config.originator, nodes: sortedNames, step: config.duration / DECIMATION, maxposition: SCRUB_RANGE, position: position, live: config.start + config.duration >= Date.now() },
             await gen(config.start, config.start + config.duration))
           ));
           break;
@@ -104,7 +103,7 @@ class Node extends Page {
 
     const position = SCRUB_RANGE - ((Date.now() - config.start) / 1000 - TIME) / SCRUB_STEP;
     this.html('info', this.template.Node(Object.assign(
-      { id: config.id, selected: config.originator, nodes: sortedNames, step: STEP, position: position, live: config.start + config.duration >= Date.now() },
+      { id: config.id, selected: config.originator, nodes: sortedNames, step: config.duration / DECIMATION, maxposition: SCRUB_RANGE, position: position, live: config.start + config.duration >= Date.now() },
       await gen(config.start, config.start + config.duration))
     ));
   }

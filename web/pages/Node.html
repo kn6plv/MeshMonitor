@@ -9,7 +9,23 @@
   <div class="chart-node">
     {{> ChartNode }}
   </div>
-  <div class="chart-scrub">
-    <input type="range" min="0" max="1007" value="{{position}}" step="1" onchange="send('chart.position.change', { id: '{{id}}', position: parseInt(event.target.value) })">
+  <div id="scrub_{{id}}" class="chart-scrub" tabindex="0">
+    <input type="range" min="0" max="{{maxposition}}" value="{{position}}" step="1">
   </div>
+  <script>
+    function notify() {
+      send('chart.position.change', { id: '{{id}}', position: parseInt(document.querySelector("#scrub_{{id}} input").value) })
+    }
+    document.querySelector("#scrub_{{id}}").addEventListener('keydown', event => {
+      if (event.key == 'ArrowRight') {
+        event.target.firstElementChild.stepUp();
+        notify();
+      }
+      else if (event.key === 'ArrowLeft') {
+        event.target.firstElementChild.stepDown();
+        notify();
+      }
+    });
+    document.querySelector("#scrub_{{id}} input").addEventListener('change', notify);
+  </script>
 </div>
