@@ -1,9 +1,11 @@
 const Template = require('./Template');
 const Log = require('debug')('ui');
 
+const Page = require('./Page');
 const Side = require('./Side');
 const Summary = require('./Summary');
 const PerNode = require('./PerNode');
+const Node = require('./Node');
 
 async function HTML(ctx) {
   Template.load();
@@ -39,8 +41,9 @@ async function WS(ctx) {
   State.tabs = {
     summary: new Summary(State),
     pernode: new PerNode(State),
+    node: new Node(State),
   };
-  State.current = State.tabs.summary,
+  State.current = new Page(State); // Dummy
   State.side.select();
   State.current.select();
 
