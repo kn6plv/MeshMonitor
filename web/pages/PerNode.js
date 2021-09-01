@@ -19,7 +19,9 @@ class PerNode extends Page {
     this.updates = {};
 
     let sortedNodes = [];
+    let lastFrom;
     const gen = async (from, to) => {
+      lastFrom = from;
       const nodes = {};
       (await DB.getMessageGroup(from, to)).forEach(entry => {
         const node = nodes[entry.originator] || (nodes[entry.originator] = { originator: NameService.lookupNameByIP(entry.originator) || entry.originator, address: entry.originator, valid: 0, duplicate: 0, outOfOrder: 0, maxHop: 0, minHop: Number.MAX_SAFE_INTEGER });
@@ -44,7 +46,7 @@ class PerNode extends Page {
         case 'select':
           const node = sortedNodes[msg.value.idx];
           if (node) {
-            this.switchPage('node', { address: node.address });
+            this.switchPage('node', { address: node.address, timestamp: lastFrom, duration: 20 * 60 });
           }
           break;
         case 'position':
