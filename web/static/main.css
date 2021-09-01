@@ -1,9 +1,26 @@
+.header {
+  position: relative;
+}
+.header .title {
+  position: absolute;
+  font-size: 24px;
+  width: 200px;
+  padding: 20px 16px;
+  color: var(--highlight-text-color);
+}
+
+#side {
+  padding-top: 60px;
+}
 #side .section {
-  padding: 5px;
+  padding: 6px;
 }
 #side .section .item {
-  color: var(--main-text-color);
+  color: var(--minor-text-color);
   text-decoration: none;
+}
+#side .section .item:hover {
+  color: var(--highlight-text-color);
 }
 
 .summary {
@@ -25,11 +42,19 @@
 
 
 .per-node {
+  display: flex;
+  flex-direction: column;
   height: 100%;
-  overflow-y: scroll;
 }
 .per-node .chart-nodes {
-  height: 400px;
+  height: 0;
+  flex: 1;
+}
+.per-node .chart-nodes-scrub {
+  flex: 0;
+}
+.per-node .chart-nodes-scrub input {
+  width: 100%;
 }
 
 

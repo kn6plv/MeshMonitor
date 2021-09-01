@@ -46,7 +46,7 @@ class Node extends Page {
         cache.cursor = to;
         cache.data = [];
         cache.color = [];
-        cache.date = Moment(from).format('MMMM Do YYYY');
+        cache.date = Moment(from).format('MMMM Do');
         let last = 0;
         (await DB.getSequenceNrs(config.originator, from, to)).forEach((point, idx) => {
           if (point.timestamp >= last) {
