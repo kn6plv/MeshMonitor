@@ -33,8 +33,10 @@ const onMessage = {
 };
 
 function runMessageManager() {
+  let keepalive;
   ws = new WebSocket(`${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}${location.pathname}ws${location.search}`);
   ws.addEventListener('close', () => {
+    clearInterval(keepalive);
     ws = dummyWS;
     watchAndReload();
   });
@@ -48,6 +50,7 @@ function runMessageManager() {
   ws.addEventListener('open', () => {
     send("tab.select", location.hash.split('#')[1] || 'summary');
   });
+  setInterval(() => send('keepalive'), 30 * 1000);
 }
 
 const psend = {};
