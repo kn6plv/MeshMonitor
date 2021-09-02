@@ -33,7 +33,7 @@ const onMessage = {
 };
 
 function runMessageManager() {
-  ws = new WebSocket(`ws://${location.host}${location.pathname}ws${location.search}`);
+  ws = new WebSocket(`${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}${location.pathname}ws${location.search}`);
   ws.addEventListener('close', () => {
     ws = dummyWS;
     watchAndReload();
