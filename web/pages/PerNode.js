@@ -52,9 +52,13 @@ class PerNode extends Page {
           }
           break;
         case 'position':
+        case 'update':
           const offset = SCRUB_RANGE - msg.value.position;
           const from = Date.now() - (TIME + offset * SCRUB_STEP) * 1000;
-          this.send('chart.position.update.nodes', await gen(from, from + TIME * 1000));
+          this.send('chart.position.update.nodes', Object.assign(
+            { live: offset === 0 },
+            await gen(from, from + TIME * 1000)
+          ));
           break;
         default:
           break;
@@ -64,7 +68,7 @@ class PerNode extends Page {
     const to = Date.now();
     const from = to - STEP * 1000;
     this.html('info', this.template.PerNode(Object.assign(
-      { id: 'nodes' },
+      { id: 'nodes', live: true },
       await gen(from, to)
     )));
   }
@@ -72,6 +76,13 @@ class PerNode extends Page {
   async deselect() {
     super.deselect();
     this.updates = {};
+  }
+
+  async 'chart.update.request' (msg) {
+    const fn = this.updates[msg.value.id];
+    if (fn) {
+      await fn('update', msg);
+    }
   }
 
   async 'chart.node.select' (msg) {

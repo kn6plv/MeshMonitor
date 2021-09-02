@@ -51,19 +51,42 @@
           onClick: (event, info, chart) => send('chart.node.select', { id: '{{id}}', idx: info[0].index })
         }
       });
+      let live = {{live}};
       onMessage['chart.position.update.{{id}}'] = msg => {
         chart.data.labels = msg.value.labels;
         const datasets = chart.data.datasets;
-        for (let i = 0; i < datasets.length; i++) {
-          datasets[i].data.length = 0;
+        const ndatasets = msg.value.datasets;
+        let eq = true;
+        for (let i = 0; eq && i < datasets.length; i++) {
+          if (datasets[i].data.length !== ndatasets[i].data.length) {
+            eq = false;
+          }
         }
-        chart.update();
-        for (let i = 0; i < datasets.length; i++) {
-          datasets[i].data.push(...msg.value.datasets[i].data);
+        if (eq) {
+          for (let i = 0; i < datasets.length; i++) {
+            for (let j = 0; j < datasets[i].data.length; j++) {
+              datasets[i].data[j] = ndatasets[i].data[j];
+            }
+          }
+        }
+        else {
+          for (let i = 0; i < datasets.length; i++) {
+            datasets[i].data.length = 0;
+          }
+          chart.update();
+          for (let i = 0; i < datasets.length; i++) {
+            datasets[i].data.push(...ndatasets[i].data);
+          }
         }
         chart.options.scales.x.title.text = msg.value.date;
         chart.update();
+        live = msg.value.live;
       }
+      whenVisible('info', 10, () => {
+        if (live) {
+          send('chart.update.request', { id: '{{id}}', position: 1007 });
+        }
+      });
     })();
     </script>
   </div>
