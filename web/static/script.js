@@ -103,7 +103,7 @@ onMessage['html.update'] = msg => {
 currentLocation = {};
 
 function updateHash() {
-  let nhash = '';
+  let nhash = '#';
   if (currentLocation.name) {
     nhash += currentLocation.name;
   }
@@ -111,7 +111,9 @@ function updateHash() {
     nhash += `#${btoa(JSON.stringify(currentLocation.arg))}`;
     break;
   }
-  location.hash = nhash;
+  if (location.hash !== nhash) {
+    location.hash = nhash;
+  }
 }
 
 onMessage['page.change'] = msg => {
