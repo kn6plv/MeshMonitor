@@ -64,7 +64,7 @@ class Page {
   }
 
   switchPage(pageName, arg) {
-    this.root.onMessage['tab.select']({ value: pageName, arg: arg });
+    this.root.onMessage['tab.select']({ value: { name: pageName, arg: arg } });
   }
 }
 

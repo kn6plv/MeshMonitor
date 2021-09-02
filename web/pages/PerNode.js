@@ -3,21 +3,16 @@ const DB = require('../../db');
 const Moment = require('moment');
 const NameService = require('../../nameService');
 
+const DISPLAY_DURATION = 30 * 60 * 1000; // 30 minutes
+const SCRUB_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days
+const SCRUB_STEP = 10 * 60 * 1000; // 10 minutes
+
 const SAMPLES = 500;
-const SCRUB_RANGE = 1007;
-const SCRUB_STEP = 10 * 60;
-const STEP = 10 * 60;
-const TIME = STEP;
 
 class PerNode extends Page {
 
-  constructor(root) {
-    super(root);
-  }
-
-  async select() {
+  async select(arg) {
     super.select();
-    this.updates = {};
 
     let sortedNodes = [];
     let lastFrom;
@@ -37,65 +32,57 @@ class PerNode extends Page {
       const datasets = [];
       [ [ 'valid', 'Valid' ], [ 'duplicate', 'Duplicate' ], [ 'outOfOrder', 'Out Of Order' ] ].forEach(keys => {
         const data = [];
-        sortedNodes.forEach(node => data.push(node[keys[0]] / STEP));
+        sortedNodes.forEach(node => data.push(node[keys[0]] / SCRUB_STEP));
         datasets.push({ label: keys[1], data: data });
       });
-      return { datasets: datasets, labels: sortedNodes.map(node => node.originator), date: Moment(from).format('MMMM Do, LT') };
+      return { datasets: datasets, labels: sortedNodes.map(node => node.originator), timestamp: to, date: Moment(to).format('MMMM Do, LT') };
     }
 
-    this.updates.nodes = async (op, msg) => {
-      switch (op) {
-        case 'select':
-          const node = sortedNodes[msg.value.idx];
-          if (node) {
-            this.switchPage('node', { address: node.address, timestamp: lastFrom, duration: 20 * 60 });
-          }
-          break;
-        case 'position':
-        case 'update':
-          const offset = SCRUB_RANGE - msg.value.position;
-          const from = Date.now() - (TIME + offset * SCRUB_STEP) * 1000;
-          this.send('chart.position.update.nodes', Object.assign(
-            { live: offset === 0 },
-            await gen(from, from + TIME * 1000)
-          ));
-          break;
-        default:
-          break;
-      }
+    this.update = async (timestamp) => {
+      const to = this.roundTime(timestamp);
+      const position = SCRUB_DURATION / SCRUB_STEP - Math.floor((Date.now() - to) / SCRUB_STEP);
+      this.send('chart.position.update', Object.assign(
+        { live: position >= SCRUB_DURATION / SCRUB_STEP, position: position, scrubDuration: SCRUB_DURATION, scrubStep: SCRUB_STEP },
+        await gen(to - DISPLAY_DURATION, to)
+      ));
     }
 
-    const to = Date.now();
-    const from = to - STEP * 1000;
+    const to = this.roundTime(arg && arg.timestamp);
+    const position = SCRUB_DURATION / SCRUB_STEP - Math.floor((Date.now() - to) / SCRUB_STEP);
     this.html('info', this.template.PerNode(Object.assign(
-      { id: 'nodes', live: true },
-      await gen(from, to)
+      { live: position >= SCRUB_DURATION / SCRUB_STEP, position: position, scrubDuration: SCRUB_DURATION, scrubStep: SCRUB_STEP },
+      await gen(to - DISPLAY_DURATION, to)
     )));
   }
 
   async deselect() {
     super.deselect();
-    this.updates = {};
+    this.update = null;
+  }
+
+  async reselect(arg) {
+    const fn = this.update;
+    if (fn) {
+      await fn(arg.timestamp);
+    }
   }
 
   async 'chart.update.request' (msg) {
-    const fn = this.updates[msg.value.id];
+    const fn = this.update;
     if (fn) {
-      await fn('update', msg);
+      await fn(undefined);
     }
   }
 
-  async 'chart.node.select' (msg) {
-    const fn = this.updates[msg.value.id];
-    if (fn) {
-      await fn('select', msg);
+  roundTime(time) {
+    if (!time) {
+      return Date.now();
     }
-  }
-
-  async 'chart.position.change' (msg) {
-    const fn = this.updates[msg.value.id];
-    if (fn) {
-      await fn('position', msg);
+    else if (Date.now() - time < SCRUB_STEP) {
+      return time;
+    }
+    else {
+      return SCRUB_STEP * Math.floor(time / SCRUB_STEP);
     }
   }
 

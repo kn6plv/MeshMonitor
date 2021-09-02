@@ -1,9 +1,10 @@
 <div class="per-node">
   <div class="chart-nodes">
-    <canvas id="{{id}}"></canvas>
+    <canvas id="nodes"></canvas>
     <script>
     (function(){
-      const chart = new Chart(document.getElementById('{{id}}'), {
+      let timestamp = {{timestamp}};
+      const chart = new Chart(document.getElementById('nodes'), {
         type: 'bar',
         data: {
           labels: [
@@ -48,11 +49,20 @@
               }
             }
           },
-          onClick: (event, info, chart) => send('chart.node.select', { id: '{{id}}', idx: info[0].index })
+          onClick: (event, info, chart) => {
+            currentLocation = {
+              name: 'node',
+              arg: {
+                name: chart.data.labels[info[0].index],
+                timestamp: timestamp
+              }
+            };
+            updateHash();
+          }
         }
       });
       let live = {{live}};
-      onMessage['chart.position.update.{{id}}'] = msg => {
+      onMessage['chart.position.update'] = msg => {
         chart.data.labels = msg.value.labels;
         const datasets = chart.data.datasets;
         const ndatasets = msg.value.datasets;
@@ -81,24 +91,33 @@
         chart.options.scales.x.title.text = msg.value.date;
         chart.update();
         live = msg.value.live;
+        timestamp = msg.value.timestamp;
       }
       whenVisible('info', 10, () => {
         if (live) {
-          send('chart.update.request', { id: '{{id}}', position: 1007 });
+          send('chart.update.request');
         }
       });
     })();
     </script>
   </div>
-  <div id="scrub_{{id}}" class="chart-nodes-scrub" tabindex="0">
-    <input type="range" min="0" max="1007" value="1007" step="1">
+  <div id="scrub_nodes" class="chart-nodes-scrub" tabindex="0">
+    <input type="range" min="0" max="{{div scrubDuration scrubStep}}" value="{{position}}" step="1">
   </div>
   <script>
     function notify() {
-      send('chart.position.change', { id: '{{id}}', position: parseInt(document.querySelector("#scrub_{{id}} input").value) })
+      const range = document.querySelector("#scrub_nodes input");
+      if (range.max == range.value) {
+        currentLocation.arg.timestamp = undefined;
+      }
+      else {
+        live = false;
+        currentLocation.arg.timestamp = Date.now() - {{scrubDuration}} + parseInt(range.value) * {{scrubStep}};
+      }
+      updateHash();
     }
-    document.querySelector("#scrub_{{id}}").addEventListener('keydown', event => {
-      if (event.key == 'ArrowRight') {
+    document.querySelector('#scrub_nodes').addEventListener('keydown', event => {
+      if (event.key === 'ArrowRight') {
         event.target.firstElementChild.stepUp();
         notify();
       }
@@ -107,6 +126,6 @@
         notify();
       }
     });
-    document.querySelector("#scrub_{{id}} input").addEventListener('change', notify);
+    document.querySelector('#scrub_nodes input').addEventListener('change', notify);
   </script>
 </div>

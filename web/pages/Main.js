@@ -94,7 +94,7 @@ async function WS(ctx) {
   });
 
   State.onMessage['tab.select'] = async msg => {
-    const tabset = (msg.value || 'main').split('.');
+    const tabset = (msg.value.name || 'main').split('.');
     Log('tab.select:', tabset[0]);
     const tab = State.tabs[tabset[0]];
     if (!tab) {
@@ -105,12 +105,12 @@ async function WS(ctx) {
       await State.current.deselect();
       State.current = tab;
       send('page.change', msg.value);
-      Log('select:', State.current.constructor.name, msg.arg);
-      await State.current.select(msg.arg);
+      Log('select:', State.current.constructor.name, msg.value.arg);
+      await State.current.select(msg.value.arg);
     }
     else {
-      Log('reselect:', State.current.constructor.name, msg.arg);
-      await State.current.reselect(msg.arg);
+      Log('reselect:', State.current.constructor.name, msg.value.arg);
+      await State.current.reselect(msg.value.arg);
     }
     if (tabset[1]) {
       Log('tabset:', tabset.slice(1).join('.'));

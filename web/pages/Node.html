@@ -1,22 +1,107 @@
 <div class="node">
   <div class="chart-select">
-    <select onchange="send('chart.change', { id: '{{id}}', address: event.target.value })">
+    <select>
       {{#each nodes}}
       <option value='{{address}}' {{#if (eq ../selected address)}}selected{{/if}}>{{name}}</option>
       {{/each}}
     </select>
   </div>
   <div class="chart-node">
-    {{> ChartNode }}
+    <canvas id="node"></canvas>
+    <script>
+    (function(){
+      const chart = new Chart(document.getElementById('node'), {
+        type: 'scatter',
+        data: {
+          labels: [],
+          datasets: [{
+            backgroundColor: 'red',
+            borderWidth: 0,
+            data: [
+              {{#each data}}
+              { x:{{x}},y:{{y}} },
+              {{/each}}
+            ],
+            pointBackgroundColor: [
+              {{#each color}}
+              '{{this}}',
+              {{/each}}
+            ]
+          }]
+        },
+        options: {
+          clip: 20,
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              type: 'time',
+              title: {
+                display: true,
+                text: '{{date}}'
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'Sequence Nr',
+              },
+              min: 0,
+              max: 65535
+            }
+          },
+          plugins: {
+            legend: {
+              display: false
+            }
+          }
+        }
+      });
+      let live = {{live}};
+      let cursor = {{cursor}};
+      onMessage['chart.update.response'] = msg => {
+        const ndata = msg.value.data;
+        const ncolor = msg.value.color;
+        const data = chart.data.datasets[0].data;
+        const color = chart.data.datasets[0].pointBackgroundColor;
+        if (msg.value.update) {
+          data.splice(0, ndata.length);
+          color.splice(0, ndata.length);
+        }
+        else {
+          data.length = 0;
+          color.length = 0;
+        }
+        data.push(...ndata);
+        color.push(...ncolor);
+        chart.options.scales.x.title.text = msg.value.date;
+        chart.update();
+        live = msg.value.live;
+        cursor = msg.value.cursor;
+      }
+      whenVisible('info', {{step}}, () => {
+        if (live) {
+          send('chart.update.request', { cursor: cursor });
+        }
+      });
+    })();
+    </script>
   </div>
-  <div id="scrub_{{id}}" class="chart-scrub" tabindex="0">
-    <input type="range" min="0" max="{{maxposition}}" value="{{position}}" step="1">
+  <div id="scrub_node" class="chart-scrub" tabindex="0">
+    <input type="range" min="0" max="{{div scrubDuration scrubStep}}" value="{{position}}" step="1">
   </div>
   <script>
     function notify() {
-      send('chart.position.change', { id: '{{id}}', position: parseInt(document.querySelector("#scrub_{{id}} input").value) })
+      const range = document.querySelector("#scrub_node input");
+      if (range.max == range.value) {
+        currentLocation.arg.timestamp = undefined;
+      }
+      else {
+        live = false;
+        currentLocation.arg.timestamp = Date.now() - {{scrubDuration}} + parseInt(range.value) * {{scrubStep}};
+      }
+      updateHash();
     }
-    document.querySelector("#scrub_{{id}}").addEventListener('keydown', event => {
+    document.querySelector("#scrub_node").addEventListener('keydown', event => {
       if (event.key == 'ArrowRight') {
         event.target.firstElementChild.stepUp();
         notify();
@@ -26,6 +111,10 @@
         notify();
       }
     });
-    document.querySelector("#scrub_{{id}} input").addEventListener('change', notify);
+    document.querySelector("#scrub_node input").addEventListener('change', notify);
+    document.querySelector(".chart-select select").addEventListener('change', event => {
+      currentLocation.arg.name = event.target.selectedOptions[0].innerText;
+      updateHash();
+    });
   </script>
 </div>

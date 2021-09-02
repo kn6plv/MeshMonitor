@@ -48,7 +48,14 @@ function runMessageManager() {
     }
   });
   ws.addEventListener('open', () => {
-    send("tab.select", location.hash.split('#')[1] || 'summary');
+    const hashes = location.hash.split('#');
+    let arg;
+    try {
+      arg = JSON.parse(atob(hashes[2]));
+    }
+    catch (_) {
+    }
+    send("tab.select", { name: hashes[1] || 'summary', arg: arg });
   });
   setInterval(() => send('keepalive'), 30 * 1000);
 }
@@ -93,13 +100,35 @@ onMessage['html.update'] = msg => {
   }
 }
 
+currentLocation = {};
+
+function updateHash() {
+  let nhash = '';
+  if (currentLocation.name) {
+    nhash += currentLocation.name;
+  }
+  for (const k in currentLocation.arg) {
+    nhash += `#${btoa(JSON.stringify(currentLocation.arg))}`;
+    break;
+  }
+  location.hash = nhash;
+}
+
 onMessage['page.change'] = msg => {
-  location.hash = msg.value || '';
+  currentLocation = Object.assign({ name: '', arg: {} }, msg.value);
+  updateHash();
 }
 
 window.addEventListener('pageshow', runMessageManager);
-window.addEventListener('hashchange', evt => {
-  send("tab.select", location.hash.split('#')[1]);
+window.addEventListener('hashchange', () => {
+  const hashes = location.hash.split('#');
+  let arg;
+  try {
+    arg = JSON.parse(atob(hashes[2]));
+  }
+  catch (_) {
+  }
+  send("tab.select", { name: hashes[1], arg: arg });
 });
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
