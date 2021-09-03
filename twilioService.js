@@ -4,7 +4,8 @@ const MovingAverage = require('moving-average');
 const OLSR = require('./olsrlib');
 
 const MAXHOP_OVER_TIME = 2 * 60 * 1000; // 2 minutes
-const MAXHOP_ALERT = 40;
+const MAXHOP_ALERT_HIGH = 50;
+const MAXHOP_ALERT_LOW = 40;
 
 if (!Config.Twilio) {
   return;
@@ -29,11 +30,17 @@ const notify = async (text) => {
 }
 
 const maxHopTrack = MovingAverage(MAXHOP_OVER_TIME);
+let storm = false;
 
 OLSR.getInstance().on('message', async m => {
   maxHopTrack.push(m.timestamp, m.maxHop);
-  if (maxHopTrack.movingAverage() >= MAXHOP_ALERT) {
+  if (!storm && maxHopTrack.movingAverage() >= MAXHOP_ALERT_HIGH) {
+    storm = true;
     await notify(`Storm detected on ${Config.General.Name} Mesh`);
+  }
+  else if (storm && maxHopTrack.movingAverage() <= MAXHOP_ALERT_LOW) {
+    storm = false;
+    await notify(`Storm subsided on ${Config.General.Name} Mesh`);
   }
 });
 
