@@ -63,7 +63,7 @@ class Node extends Page {
         (await DB.getSequenceNrs(config.originator, from, to, SAMPLES)).samples.forEach((point, idx) => {
           if (point.timestamp >= last) {
             last = point.timestamp + DISPLAY_DURATION / SAMPLES;
-            cache.data.push({ x: point.timestamp, y: point.seqnr });
+            cache.data.push({ x: point.timestamp, y: point.seqnr, h: point.maxHop });
             cache.color.push(this.gradient.colorAt(point.maxHop));
           }
         });

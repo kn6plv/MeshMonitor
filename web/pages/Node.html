@@ -19,7 +19,7 @@
             borderWidth: 0,
             data: [
               {{#each data}}
-              { x:{{x}},y:{{y}} },
+              { x:{{x}},y:{{y}},h:{{h}} },
               {{/each}}
             ],
             pointBackgroundColor: [
@@ -52,6 +52,14 @@
           plugins: {
             legend: {
               display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: ctx => {
+                  const point = ctx.dataset.data[ctx.dataIndex];
+                  return `${moment(point.x).format('LTS')}, seqnr ${point.y}, hop: ${point.h}`;
+                }
+              }
             }
           }
         }
