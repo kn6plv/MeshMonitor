@@ -11,4 +11,4 @@ catch (_) {
 require('./netMonitor');
 require('./nameService');
 require('./web/server');
-require('./twilioService');
+require('./health');

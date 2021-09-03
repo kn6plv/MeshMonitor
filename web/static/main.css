@@ -3,14 +3,37 @@
 }
 .header .title {
   position: absolute;
-  font-size: 24px;
   width: 200px;
-  padding: 20px 16px;
+  padding: 28px 0 0 20px;
+  color: var(--main-text-color);
+}
+.header .title .main {
+  font-size: 16px;
+  padding-bottom: 2px;
+}
+.header .title .sub {
+  font-size: 24px;
+  padding-bottom: 6px;
+  margin-left: -1px;
   color: var(--highlight-text-color);
+}
+.header .title .health .status {
+  text-transform: capitalize;
+}
+.header .title .health .status.good {
+  color: green;
+}
+.header .title .health .status.bad {
+  color: red;
+}
+.header .title .health .status.text {
+  padding-top: 2px;
+  font-size: 12px;
+  color: var(--minor-text-color);
 }
 
 #side {
-  padding-top: 60px;
+  padding-top: 100px;
 }
 #side .section {
   padding: 6px;

@@ -15,7 +15,11 @@
   <body>
     <div class="header">
       <div class="title">
-        AREDN OLSR Monitor
+        <div class="main">AREDN</div>
+        <div class="sub">{{config.General.Name}}</div>
+        <div id="health" class="health">
+          {{> Health }}
+        </div>
       </div>
     </div>
     <div class="body">

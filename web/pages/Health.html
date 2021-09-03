@@ -1,0 +1,9 @@
+{{#with health}}
+Health:
+{{#if healthy}}
+<span class="status good">good</span>
+{{else}}
+<span class="status bad">{{reason}}</span>
+<div class="status text">{{text}}</div>
+{{/if}}
+{{/with}}
