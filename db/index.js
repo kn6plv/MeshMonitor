@@ -115,7 +115,7 @@ const Database = {
     const decimation = Math.min(10, Math.ceil(count / samples));
     return {
       decimation: decimation,
-      samples: await this.db.all('SELECT originator, valid, duplicate, outOfOrder, maxHop FROM messageSummary WHERE timestamp BETWEEN ? AND ? AND ROWID % ? = 0', from, to, decimation)
+      samples: await this.db.all('SELECT originator, valid, duplicate, outOfOrder FROM messageSummary WHERE timestamp BETWEEN ? AND ? AND ROWID % ? = 0', from, to, decimation)
     };
   },
 

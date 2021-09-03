@@ -25,14 +25,12 @@ class PerNode extends Page {
         node.valid += entry.valid * results.decimation;
         node.duplicate += entry.duplicate * results.decimation;
         node.outOfOrder += entry.outOfOrder * results.decimation;
-        node.maxHop = Math.max(node.maxHop, entry.maxHop);
-        node.minHop = Math.min(node.minHop, entry.maxHop);
       });
       sortedNodes = Object.values(nodes).sort((a, b) => a.originator.localeCompare(b.originator, { sensitivity: 'base' }));
       const datasets = [];
       [ [ 'valid', 'Valid' ], [ 'duplicate', 'Duplicate' ], [ 'outOfOrder', 'Out Of Order' ] ].forEach(keys => {
         const data = [];
-        sortedNodes.forEach(node => data.push(node[keys[0]] / SCRUB_STEP));
+        sortedNodes.forEach(node => data.push(node[keys[0]] / SCRUB_STEP * 1000));
         datasets.push({ label: keys[1], data: data });
       });
       return { datasets: datasets, labels: sortedNodes.map(node => node.originator), timestamp: to, date: Moment(to).format('MMMM Do, LT') };
