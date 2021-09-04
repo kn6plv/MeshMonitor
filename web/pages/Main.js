@@ -6,13 +6,11 @@ const Side = require('./Side');
 const Summary = require('./Summary');
 const PerNode = require('./PerNode');
 const Node = require('./Node');
-const Health = require('../../health');
 
 async function HTML(ctx) {
   Template.load();
   ctx.body = Template.Main({
-    config: Config,
-    health: Health.getHealth()
+    config: Config
   });
   ctx.type = 'text/html';
 }
@@ -121,11 +119,6 @@ async function WS(ctx) {
       State.current.tabSelect(tabset.slice(1).join('.'));
     }
   }
-
-  // Monitor health
-  Health.on('update', () => {
-    send('html.update', { id: 'health', html: Template.Health({ health: Health.getHealth() }) });
-  });
 }
 
 module.exports = {

@@ -1,17 +1,17 @@
 const Page = require('./Page');
+const Health = require('../../health');
 
 class Side extends Page {
 
-  constructor(root) {
-    super(root);
-  }
-
   async select() {
     super.select();
-  }
 
-  async deselect() {
-    super.deselect();
+    // Monitor health
+    Health.on('update', () => {
+      this.html('health', this.template.Health({ health: Health.getHealth() }));
+    });
+
+    this.html('health', this.template.Health({ health: Health.getHealth() }));
   }
 
 }
