@@ -24,9 +24,9 @@ const Database = {
     await this.db.exec('PRAGMA synchronous = OFF');
     await this.db.exec('PRAGMA journal_mode = MEMORY');
 
-    await this.db.exec('CREATE TABLE IF NOT EXISTS message (timestamp INTEGER, pktseqnr INTEGER, originator TEXT, valid INTEGER, duplicate INTEGER, outOfOrder INTEGER, maxHop INTEGER, ttl INTEGER, seqnr INTEGER, type TEXT, json TEXT)');
-    await this.db.exec('CREATE TABLE IF NOT EXISTS messageSummary (timestamp INTEGER, valid INTEGER, duplicate INTEGER, outOfOrder INTEGER, maxHop INTEGER, originator TEXT)');
-    await this.db.exec('CREATE TABLE IF NOT EXISTS messageHourlySummary (timestamp INTEGER, valid INTEGER, duplicate INTEGER, outOfOrder INTEGER, maxHop INTEGER)');
+    await this.db.exec('CREATE TABLE IF NOT EXISTS message (timestamp INTEGER, pktseqnr INTEGER, originator TEXT, valid INTEGER, duplicate INTEGER, outOfOrder INTEGER, maxHop INTEGER, jitter INTEGER, ttl INTEGER, seqnr INTEGER, type TEXT, json TEXT)');
+    await this.db.exec('CREATE TABLE IF NOT EXISTS messageSummary (timestamp INTEGER, valid INTEGER, duplicate INTEGER, outOfOrder INTEGER, maxHop INTEGER, jitter INTEGER, originator TEXT)');
+    await this.db.exec('CREATE TABLE IF NOT EXISTS messageHourlySummary (timestamp INTEGER, valid INTEGER, duplicate INTEGER, outOfOrder INTEGER, maxHop INTEGER, jitter INTEGER)');
 
     await this.db.exec('CREATE INDEX IF NOT EXISTS messageTimestamp ON message (timestamp)');
     await this.db.exec('CREATE INDEX IF NOT EXISTS messageSummaryTimestamp ON messageSummary (timestamp)');
@@ -35,7 +35,7 @@ const Database = {
 
   async addMessage(message) {
     const [ m, s ] = await Promise.all([
-      this.db.run('INSERT INTO message (timestamp, pktseqnr, originator, valid, duplicate, outOfOrder, maxHop, ttl, seqnr, type, json) VALUES(:timestamp, :pktseqnr, :originator, :valid, :duplicate, :outOfOrder, :maxHop, :ttl, :seqnr, :type, :json)',
+      this.db.run('INSERT INTO message (timestamp, pktseqnr, originator, valid, duplicate, outOfOrder, maxHop, jitter, ttl, seqnr, type, json) VALUES(:timestamp, :pktseqnr, :originator, :valid, :duplicate, :outOfOrder, :maxHop, :jitter, :ttl, :seqnr, :type, :json)',
         {
           ':timestamp': message.timestamp,
           ':pktseqnr': message.pktseqnr,
@@ -44,13 +44,24 @@ const Database = {
           ':duplicate': message.duplicate,
           ':outOfOrder': message.outOfOrder,
           ':maxHop': message.maxHop,
+          ':jitter': message.jitter,
           ':ttl': message.ttl,
           ':seqnr': message.seqnr,
           ':type': message.type,
           ':json': JSON.stringify(message)
         }
       ),
-      this.db.run('INSERT INTO messageSummary (timestamp, valid, duplicate, outOfOrder, maxHop, originator) VALUES (:timestamp, :valid, :duplicate, :outOfOrder, :maxHop, :originator)', { ':timestamp': message.timestamp, ':valid': message.valid, ':duplicate': message.duplicate, ':outOfOrder': message.outOfOrder, ':maxHop': message.maxHop, ':originator': message.originator })
+      this.db.run('INSERT INTO messageSummary (timestamp, valid, duplicate, outOfOrder, maxHop, jitter, originator) VALUES (:timestamp, :valid, :duplicate, :outOfOrder, :maxHop, :jitter, :originator)',
+        {
+          ':timestamp': message.timestamp,
+          ':valid': message.valid,
+          ':duplicate': message.duplicate,
+          ':outOfOrder': message.outOfOrder,
+          ':maxHop': message.maxHop,
+          ':jitter': message.jitter,
+          ':originator': message.originator
+        }
+      )
     ]);
 
     // Trim messages periodically
@@ -67,12 +78,13 @@ const Database = {
   },
 
   async addMessageHourlySummary(summary) {
-    this.db.run('INSERT INTO messageHourlySummary (timestamp, valid, duplicate, outOfOrder, maxHop) VALUES (?, ?, ?, ?, ?)',
+    this.db.run('INSERT INTO messageHourlySummary (timestamp, valid, duplicate, outOfOrder, maxHop, jitter) VALUES (?, ?, ?, ?, ?, ?)',
       summary.timestamp,
       summary.valid,
       summary.duplicate,
       summary.outOfOrder,
-      summary.maxHop
+      summary.maxHop,
+      summary.jitter
     );
   },
 
@@ -104,6 +116,10 @@ const Database = {
 
   async maxHopCount(from, to) {
     return (await this.db.get('SELECT MAX(maxHop) FROM messageSummary WHERE valid = 1 AND timestamp BETWEEN ? AND ?', from, to))['MAX(maxHop)'];
+  },
+
+  async maxJitterCount(from, to) {
+    return (await this.db.get('SELECT MAX(ABS(jitter)) FROM messageSummary WHERE valid = 1 AND timestamp BETWEEN ? AND ?', from, to))['MAX(ABS(jitter))'];
   },
 
   async messageSummary(from) {

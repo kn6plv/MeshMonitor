@@ -48,7 +48,7 @@ body {
   display: flex;
   flex-direction: row;
   flex: 1;
-  overflow-y: hidden;
+  overflow: hidden;
   background-color: var(--info-background-color);
 }
 .body .col {
@@ -63,6 +63,7 @@ body {
   padding: 20px;
   border-top-left-radius: 20px;
   background-color: var(--main-background-color);
+  overflow: hidden;
 }
 
 .section {

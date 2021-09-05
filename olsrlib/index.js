@@ -228,7 +228,8 @@ class OLSR extends Emitter {
       valid: true,
       outOfOrder: false,
       zeroTtl: false,
-      duplicate: false
+      duplicate: false,
+      jitter: 0
     };
 
     if (ttl === 0) {
@@ -242,9 +243,9 @@ class OLSR extends Emitter {
       messages: {}
     });
 
+    valid.jitter = ((seqnr - originatorState.seqnr) << 16) >> 16;
     const oldPayload = originatorState.messages[seqnr];
-    const seqdiff = (originatorState.seqnr - seqnr) & 0xFFFF;
-    if (seqdiff >= 0 && seqdiff < 0x8000) {
+    if (valid.jitter <= 0) {
       if (!oldPayload || payload.compare(oldPayload) !== 0) {
         valid.outOfOrder = true;
       }
@@ -253,7 +254,6 @@ class OLSR extends Emitter {
         valid.duplicate = true;
       }
     }
-
     originatorState.seqnr = seqnr;
     originatorState.messages[seqnr] = payload;
 

@@ -21,18 +21,21 @@ class Summary extends Page {
       await this.generateChart({ id: 'duplicate_m', title: 'Duplicate', color: 'blue', value: async (from, to) => await DB.duplicateCount(from, to) / 10, step: 10, suggestedY: 200, labels: MIN5_AXIS, ticks: 6, units: { label: 'Seconds', scale: 10 } }),
       await this.generateChart({ id: 'outoforder_m', title: 'Out Of Order', color: 'salmon', value: async (from, to) => await DB.outOfOrderCount(from, to) / 10, step: 10, suggestedY: 200, labels: MIN5_AXIS, ticks: 6, units: { label: 'Seconds', scale: 10 } }),
       await this.generateChart({ id: 'maxhop_m', title: 'Max Hops', color: 'purple', value: async (from, to) => await DB.maxHopCount(from, to), step: 10, suggestedY: 30, labels: MIN5_AXIS, ticks: 6, units: { label: 'Seconds', scale: 10 } }),
+      await this.generateChart({ id: 'jitter_m', title: 'Max Jitter', color: 'orange', value: async (from, to) => await DB.maxJitterCount(from, to), step: 10, suggestedY: 100, labels: MIN5_AXIS, ticks: 6, units: { label: 'Seconds', scale: 10 } }),
     ];
     const chart1hour = [
       await this.generateChart({ id: 'valid_h', title: 'Valid', color: 'green', value: async (from, to) => await DB.validCount(from, to) / 300, step: 300, suggestedY: 200, labels: HOUR1_AXIS, ticks: 7, units: { label: 'Minutes', scale: 5 } }),
       await this.generateChart({ id: 'duplicate_h', title: 'Duplicate', color: 'blue', value: async (from, to) => await DB.duplicateCount(from, to) / 300, step: 300, suggestedY: 200, labels: HOUR1_AXIS, ticks: 7, units: { label: 'Minutes', scale: 5 } }),
       await this.generateChart({ id: 'outoforder_h', title: 'Out Of Order', color: 'salmon', value: async (from, to) => await DB.outOfOrderCount(from, to) / 300, step: 300, suggestedY: 200, labels: HOUR1_AXIS, ticks: 7, units: { label: 'Minutes', scale: 5 } }),
       await this.generateChart({ id: 'maxhop_h', title: 'Max Hops', color: 'purple', value: async (from, to) => await DB.maxHopCount(from, to), step: 300, suggestedY: 30, labels: HOUR1_AXIS, ticks: 7, units: { label: 'Minutes', scale: 5 } }),
+      await this.generateChart({ id: 'jitter_h', title: 'Max Jitter', color: 'orange', value: async (from, to) => await DB.maxJitterCount(from, to), step: 300, suggestedY: 100, labels: HOUR1_AXIS, ticks: 7, units: { label: 'Minutes', scale: 5 } }),
     ];
     const chart1day = [
       await this.generateChart({ id: 'valid_d', title: 'Valid', color: 'green', value: async (_, to) => (await DB.messageSummary(to)).valid / 3600, step: 3600, suggestedY: 200, labels: DAY1_AXIS, ticks: 13, units: { label: 'Hours', scale: 1 } }),
       await this.generateChart({ id: 'duplicate_d', title: 'Duplicate', color: 'blue', value: async (_, to) => (await DB.messageSummary(to)).duplicate / 3600, step: 3600, suggestedY: 200, labels: DAY1_AXIS, ticks: 13, units: { label: 'Hours', scale: 1 } }),
       await this.generateChart({ id: 'outoforder_d', title: 'Out Of Order', color: 'salmon', value: async (_, to) => (await DB.messageSummary(to)).outOfOrder / 3600, step: 3600, suggestedY: 200, labels: DAY1_AXIS, ticks: 13, units: { label: 'Hours', scale: 1 } }),
       await this.generateChart({ id: 'maxhop_d', title: 'Max Hops', color: 'purple' ,value: async (_, to) => (await DB.messageSummary(to)).maxHop, step: 3600, suggestedY: 30, labels: DAY1_AXIS, ticks: 13, units: { label: 'Hours', scale: 1 } }),
+      await this.generateChart({ id: 'jitter_d', title: 'Max Jitter', color: 'orange', value: async (_, to) => (await DB.messageSummary(to)).jitter, step: 3600, suggestedY: 100, labels: DAY1_AXIS, ticks: 13, units: { label: 'Hours', scale: 1 } }),
     ];
     this.html('info', this.template.Summary({ chart5min, chart1hour, chart1day }));
   }

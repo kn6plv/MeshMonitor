@@ -29,7 +29,8 @@ const TRIM_AGE = 60 * 60 * 24 * 7 + 2 * TRIM_OFTEN;
       valid: await DB.validCount(from, to),
       duplicate: await DB.duplicateCount(from, to),
       outOfOrder: await DB.outOfOrderCount(from, to),
-      maxHop: await DB.maxHopCount(from, to)
+      maxHop: await DB.maxHopCount(from, to),
+      jitter: await DB.maxJitterCount(from, to)
     };
     DB.addMessageHourlySummary(entry);
   }

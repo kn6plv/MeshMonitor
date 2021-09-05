@@ -47,7 +47,8 @@
 
 .summary {
   height: 100%;
-  overflow-y: scroll;
+  width: 100%;
+  overflow: scroll;
 }
 .summary .charts {
   display: flex;
@@ -57,8 +58,8 @@
   font-size: 18px;
 }
 .summary .charts .chart-thumb {
-  width: 250px;
-  height: 250px;
+  width: 200px;
+  height: 200px;
   padding: 10px;
 }
 
