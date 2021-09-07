@@ -11,6 +11,7 @@ const MSG_NAMES = {
 const LINK_TYPE = [ 'UNSPEC', 'ASYM', 'SYM', 'LOST' ];
 const NEIGHBOR_TYPE = [ 'SYM', 'MPR', 'NOT', '<3>' ];
 const NAME_TYPES = [ 'HOST', 'FORWARDER', 'SERVICE', 'LATLON', 'MACADDR' ];
+const STATE_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 
 class OLSR extends Emitter {
 
@@ -87,6 +88,10 @@ class OLSR extends Emitter {
           message.payload = payload;
           break;
       }
+if (Math.abs(message.jitter) > 500) {
+  console.log('--------------------------------------------------');
+  console.log(JSON.stringify(message, null, 2));
+}
 
       Log(JSON.stringify(message, null, 2));
       this.emit('message', message);
@@ -238,10 +243,11 @@ class OLSR extends Emitter {
       valid.zeroTtl = true;
     }
 
-    const originatorState = this.originators[originator] || (this.originators[originator] = {
-      seqnr: seqnr - 1,
-      messages: {}
-    });
+    const originatorState = this.originators[originator] || (this.originators[originator] = { lastSeen: 0 });
+    if (Date.now() - originatorState.lastSeen > STATE_TIMEOUT) {
+      originatorState.seqnr = seqnr - 1;
+      originatorState.messages = {};
+    }
 
     valid.jitter = ((seqnr - originatorState.seqnr) << 16) >> 16;
     const oldPayload = originatorState.messages[seqnr];
@@ -256,6 +262,7 @@ class OLSR extends Emitter {
     }
     originatorState.seqnr = seqnr;
     originatorState.messages[seqnr] = payload;
+    originatorState.lastSeen = Date.now();
 
     return valid;
   }
