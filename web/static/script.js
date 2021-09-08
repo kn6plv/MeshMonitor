@@ -48,7 +48,7 @@ function runMessageManager() {
     }
   });
   ws.addEventListener('open', () => {
-    const hashes = location.hash.split('#');
+    const hashes = decodeURIComponent(location.hash).split('#');
     let arg;
     try {
       arg = JSON.parse(atob(hashes[2]));
