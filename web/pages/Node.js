@@ -64,7 +64,7 @@ class Node extends Page {
           if (point.timestamp >= last) {
             last = point.timestamp + DISPLAY_DURATION / SAMPLES;
             cache.data.push({ x: point.timestamp, y: point.seqnr, h: point.maxHop });
-            cache.color.push(this.gradient.colorAt(point.maxHop));
+            cache.color.push(`#${this.gradient.colorAt(point.maxHop)}`);
           }
         });
       }
