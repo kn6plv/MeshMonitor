@@ -1,6 +1,11 @@
 const Dgram = require('dgram');
 const Emitter = require('events');
 const Log = require('debug')('olsr');
+const LogHELLO = Log.extend('hello');
+const LogTC = Log.extend('tc');
+const LogMID = Log.extend('mid');
+const LogNS = Log.extend('ns');
+const LogHNA = Log.extend('hna');
 
 const DEFAULT_PORT = 698;
 const MSG_NAMES = {
@@ -38,7 +43,7 @@ class OLSR extends Emitter {
     let msgsize = 0;
     for (let offset = 4; offset < len; offset += msgsize) {
       const msgtype = msg.readUInt8(offset + 0);
-      //const vtime = msg.readUInt8(offset + 1);
+      const vtime = msg.readUInt8(offset + 1);
       msgsize = msg.readUInt16BE(offset + 2);
       const originator = this.toIPAddress(msg.slice(offset + 4, offset + 8));
       const ttl = msg.readUInt8(offset + 8);
@@ -50,7 +55,7 @@ class OLSR extends Emitter {
       }
       const payload = msg.slice(offset + 12, offset + msgsize);
 
-      //const validityTimeSeconds = 0.0625 * (1 + (vtime >> 4)) * Math.pow(2, vtime & 15);
+      const validityTimeSeconds = 0.0625 * (1 + (vtime >> 4) / 16) * Math.pow(2, vtime & 15);
 
       const message = Object.assign({
         timestamp: Date.now(),
@@ -59,39 +64,43 @@ class OLSR extends Emitter {
         originator: originator,
         ttl: ttl,
         maxHop: hopcount,
-        seqnr: msgseqnr
+        seqnr: msgseqnr,
+        vtime: validityTimeSeconds
       }, this.isValidMsg(originator, ttl, msgseqnr, payload));
 
       switch (message.type) {
         case 'HELLO':
           this.incomingHello(message, payload);
+          LogHELLO(JSON.stringify(message, null, 2));
           break;
         case 'TC':
           this.incomingTC(message, payload);
+          LogTC(JSON.stringify(message, null, 2));
           break;
         case 'MID':
           this.incomingMID(message, payload);
+          LogMID(JSON.stringify(message, null, 2));
           break;
         case 'HNA':
           this.incomingHNA(message, payload);
+          LogHNA(JSON.stringify(message, null, 2));
           break;
         case 'NS':
           this.incomingNS(message, payload);
+          LogNS(JSON.stringify(message, null, 2));
           break;
         case 'LQ_HELLO':
           this.incomingLQHello(message, payload);
+          LogHELLO(JSON.stringify(message, null, 2));
           break;
         case 'LQ_TC':
           this.incomingLQTC(message, payload);
+          LogTC(JSON.stringify(message, null, 2));
           break;
         default:
           message.payload = payload;
           break;
       }
-if (Math.abs(message.jitter) > 500) {
-  console.log('--------------------------------------------------');
-  console.log(JSON.stringify(message, null, 2));
-}
 
       Log(JSON.stringify(message, null, 2));
       this.emit('message', message);
