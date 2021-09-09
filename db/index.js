@@ -1,5 +1,6 @@
 const SQLite3 = require('sqlite3');
 const SQLite = require('sqlite');
+const FS = require('fs');
 const Log = require('debug')('db');
 
 const Database = {
@@ -11,6 +12,7 @@ const Database = {
   },
 
   async open() {
+    FS.mkdirSync('state', { recursive: true });
     this.db = await SQLite.open({
       filename: 'state/olsr.db',
       driver: SQLite3.cached.Database
