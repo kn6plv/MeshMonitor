@@ -4,8 +4,8 @@ try {
   global.Config = require('./config');
 }
 catch (_) {
-  console.error('Missing config.js - using defaults');
-  global.Config = {};
+  console.error('Missing config.js!');
+  process.exit(1);
 }
 
 require('./netMonitor');

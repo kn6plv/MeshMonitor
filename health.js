@@ -6,8 +6,8 @@ const nameService = require('./nameService');
 const Log = require('debug')('health');
 
 const MAXHOP_OVER_TIME = 2 * 60 * 1000; // 2 minutes
-const MAXHOP_ALERT_HIGH = 50;
-const MAXHOP_ALERT_LOW = 40;
+const MAXHOP_ALERT_HIGH = Config.Health.Storm.HopCount.Begin || 50;
+const MAXHOP_ALERT_LOW = Config.Health.Storm.HopCount.End || 40;
 
 class Health extends EventEmitter {
 
