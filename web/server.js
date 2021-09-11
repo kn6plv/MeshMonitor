@@ -11,7 +11,7 @@ const LogBus = require('debug')('bus');
 process.umask(0);
 
 // More listeners
-EventEmitter.defaultMaxListeners = 50;
+EventEmitter.defaultMaxListeners = 200;
 global.Bus = new EventEmitter();
 if (LogBus.enabled) {
   const counts = {};
