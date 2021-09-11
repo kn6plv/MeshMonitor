@@ -6,12 +6,16 @@ class Side extends Page {
   async select() {
     super.select();
 
-    // Monitor health
-    Health.on('update', () => {
-      this.html('health', this.template.Health({ health: Health.getHealth() }));
-    });
+    this._healthUpdate = () => this.html('health', this.template.Health({ health: Health.getHealth() }));
 
-    this.html('health', this.template.Health({ health: Health.getHealth() }));
+    // Monitor health
+    Health.on('update', this._healthUpdate);
+
+    this._healthUpdate();
+  }
+
+  async deselect() {
+    Health.off('update', this._healthUpdate);
   }
 
 }

@@ -53,6 +53,9 @@ async function WS(ctx) {
     if (State.current) {
       State.current.deselect();
     }
+    if (State.side) {
+      State.side.deselect();
+    }
   });
 
   ctx.websocket.on('error', () => {
