@@ -104,10 +104,6 @@ const Database = {
     return (await this.db.get('SELECT COUNT(*) FROM messageSummary WHERE valid = 1 AND timestamp BETWEEN ? AND ?', from, to))['COUNT(*)'];
   },
 
-  async invalidCount(from, to) {
-    return (await this.db.get('SELECT COUNT(*) FROM messageSummary WHERE valid = 0 AND duplicate = 0 AND timestamp BETWEEN ? AND ?', from, to))['COUNT(*)'];
-  },
-
   async duplicateCount(from, to) {
     return (await this.db.get('SELECT COUNT(*) FROM messageSummary WHERE duplicate = 1 AND timestamp BETWEEN ? AND ?', from, to))['COUNT(*)'];
   },
