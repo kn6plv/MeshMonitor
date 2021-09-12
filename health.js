@@ -2,38 +2,79 @@ const EventEmitter = require('events');
 const MovingAverage = require('moving-average');
 const OLSR = require('./olsrlib');
 const Alerts = require('./alerts');
-const nameService = require('./nameService');
+const NameService = require('./nameService');
 const Log = require('debug')('health');
 
 const MAXHOP_OVER_TIME = 2 * 60 * 1000; // 2 minutes
-const MAXHOP_ALERT_HIGH = Config.Health.Storm.HopCount.Begin || 50;
-const MAXHOP_ALERT_LOW = Config.Health.Storm.HopCount.End || 40;
+const MAXHOP_ALERT_HIGH = Config.Health.Storm.HopCount.Begin;
+const MAXHOP_ALERT_LOW = Config.Health.Storm.HopCount.End;
+const VALID_OVER_TIME = 2 * 60 * 1000; // 2 minutes
+const VALID_ALERT_LOW = Config.Health.ValidLow.Valid.Begin;
+const VALID_ALERT_HIGH = Config.Health.ValidLow.Valid.End;
 
 class Health extends EventEmitter {
 
   constructor() {
     super();
 
-    this.stormer = null;
-    this.maxHopTrack = MovingAverage(MAXHOP_OVER_TIME);
+    this.unhealthy = null;
+    const maxHopTrack = MovingAverage(MAXHOP_OVER_TIME);
+    let validAverage = 0;
+
+    let last = Date.now();
 
     OLSR.getInstance().on('message', async m => {
-      this.maxHopTrack.push(m.timestamp, m.maxHop);
-      if (!this.stormer && this.maxHopTrack.movingAverage() >= MAXHOP_ALERT_HIGH && m.maxHop >= MAXHOP_ALERT_HIGH) {
-        const name = nameService.lookupNameByIP(m.originator);
-        if (name) {
-          this.stormer = `${name} (${m.originator})`;
+
+      maxHopTrack.push(m.timestamp, m.maxHop);
+      validAverage = validAverage * 0.999 + 0.001 * (m.timestamp - last);
+      last = m.timestamp;
+
+      if (!this.unhealthy) {
+        if (maxHopTrack.movingAverage() >= MAXHOP_ALERT_HIGH && m.maxHop >= MAXHOP_ALERT_HIGH) {
+          const name = NameService.lookupNameByIP(m.originator);
+          if (name) {
+            this.unhealthy = {
+              reason: 'Storm',
+              text: `${name} (${m.originator})`
+            };
+          }
+          else {
+            this.unhealthy = {
+              reason: 'Storm',
+              text: m.originator
+            };
+          }
+          this.emit('update');
+          await Alerts.notify(`Storm detected on ${Config.General.Name} Mesh by ${this.unhealthy.text}`);
         }
-        else {
-          this.stormer = m.originator;
+        else if (1000 / validAverage <= VALID_ALERT_LOW) {
+          this.unhealthy = {
+            reason: 'Low Messages',
+            text: 'Valid message rate low'
+          };
+          this.emit('update');
+          await Alerts.notify(`Valid message rate on ${Config.General.Name} Mesh is low`);
         }
-        this.emit('update');
-        await Alerts.notify(`Storm detected on ${Config.General.Name} Mesh by ${this.stormer}`);
       }
-      else if (this.stormer && this.maxHopTrack.movingAverage() <= MAXHOP_ALERT_LOW) {
-        this.stormer = null;
-        this.emit('update');
-        await Alerts.notify(`Storm subsided on ${Config.General.Name} Mesh`);
+      else {
+        switch (this.unhealthy.reason) {
+          case 'Storm':
+            if (maxHopTrack.movingAverage() <= MAXHOP_ALERT_LOW) {
+              this.unhealthy = null;
+              this.emit('update');
+              await Alerts.notify(`Storm subsided on ${Config.General.Name} Mesh`);
+            }
+            break;
+          case 'Low Messages':
+            if (1000 / validAverage >= VALID_ALERT_HIGH) {
+              this.unhealthy = null;
+              this.emit('update');
+              await Alerts.notify(`Valid message rate on ${Config.General.Name} Mesh returned to normal`);
+            }
+            break;
+          default:
+            break;
+        }
       }
     });
 
@@ -43,17 +84,13 @@ class Health extends EventEmitter {
   }
 
   getHealth() {
-    if (!this.stormer) {
+    if (!this.unhealthy) {
       return {
         healthy: true,
         text: 'Good'
       }
     }
-    return {
-      healthy: false,
-      reason: 'storm',
-      text: this.stormer
-    };
+    return Object.assign({ healthy: false }, this.unhealthy);
   }
 
 }

@@ -11,6 +11,12 @@ module.exports = {
         Begin: 50,
         End: 40
       }
+    },
+    ValidLow: {
+      Valid: {
+        Begin: 100,
+        End: 120
+      }
     }
   },
 
