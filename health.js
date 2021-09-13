@@ -8,7 +8,6 @@ const Log = require('debug')('health');
 const MAXHOP_OVER_TIME = 2 * 60 * 1000; // 2 minutes
 const MAXHOP_ALERT_HIGH = Config.Health.Storm.HopCount.Begin;
 const MAXHOP_ALERT_LOW = Config.Health.Storm.HopCount.End;
-const VALID_OVER_TIME = 2 * 60 * 1000; // 2 minutes
 const VALID_ALERT_LOW = Config.Health.ValidLow.Valid.Begin;
 const VALID_ALERT_HIGH = Config.Health.ValidLow.Valid.End;
 
@@ -26,7 +25,7 @@ class Health extends EventEmitter {
     OLSR.getInstance().on('message', async m => {
 
       maxHopTrack.push(m.timestamp, m.maxHop);
-      validAverage = validAverage * 0.999 + 0.001 * (m.timestamp - last);
+      validAverage = validAverage * 0.9999 + 0.0001 * (m.timestamp - last);
       last = m.timestamp;
 
       if (!this.unhealthy) {
