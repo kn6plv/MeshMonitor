@@ -26,11 +26,11 @@ const TRIM_AGE = 60 * 60 * 24 * 7 + 2 * TRIM_OFTEN;
     const from = to - HOUR1;
     const entry = {
       timestamp: to,
-      valid: await DB.validCount(from, to),
-      duplicate: await DB.duplicateCount(from, to),
-      outOfOrder: await DB.outOfOrderCount(from, to),
-      maxHop: await DB.maxHopCount(from, to),
-      jitter: await DB.maxJitterCount(from, to)
+      valid: (await DB.validCount(from, to)).count,
+      duplicate: (await DB.duplicateCount(from, to)).count,
+      outOfOrder: (await DB.outOfOrderCount(from, to)).count,
+      maxHop: (await DB.maxHopCount(from, to)).count,
+      jitter: (await DB.maxJitterCount(from, to)).count
     };
     DB.addMessageHourlySummary(entry);
   }

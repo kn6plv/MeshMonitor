@@ -9,7 +9,10 @@
         datasets: [{
           label: '{{title}}',
           data: [ {{data}} ],
-          borderColor: [ '{{color}}' ]
+          borderColor: [ '{{color}}' ],
+          {{#if extra}}
+          extra: [ {{#each extra}}'{{this}}',{{/each}} ]
+          {{/if}}
         }]
       },
       options: {
@@ -34,6 +37,11 @@
               title: ctx => {
                 return `${ {{units.scale}} * ({{nrlabels}} - 1 - ctx[0].dataIndex)} {{units.label}} Ago`;
               },
+              {{#if extra}}
+              footer: ctx => {
+                return `Originator: ${ctx[0].dataset.extra[ctx[0].dataIndex]}`;
+              },
+              {{/if}}
               labelColor: ctx => {
                 return {
                   backgroundColor: '{{color}}'

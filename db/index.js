@@ -97,27 +97,45 @@ const Database = {
   },
 
   async totalCount(from, to) {
-    return (await this.db.get('SELECT COUNT(*) FROM messageSummary WHERE timestamp BETWEEN ? AND ?', from, to))['COUNT(*)'];
+    return {
+      count: (await this.db.get('SELECT COUNT(*) FROM messageSummary WHERE timestamp BETWEEN ? AND ?', from, to))['COUNT(*)']
+    };
   },
 
   async validCount(from, to) {
-    return (await this.db.get('SELECT COUNT(*) FROM messageSummary WHERE valid = 1 AND timestamp BETWEEN ? AND ?', from, to))['COUNT(*)'];
+    return {
+      count: (await this.db.get('SELECT COUNT(*) FROM messageSummary WHERE valid = 1 AND timestamp BETWEEN ? AND ?', from, to))['COUNT(*)']
+    };
   },
 
   async duplicateCount(from, to) {
-    return (await this.db.get('SELECT COUNT(*) FROM messageSummary WHERE duplicate = 1 AND timestamp BETWEEN ? AND ?', from, to))['COUNT(*)'];
+    return {
+      count: (await this.db.get('SELECT COUNT(*) FROM messageSummary WHERE duplicate = 1 AND timestamp BETWEEN ? AND ?', from, to))['COUNT(*)']
+    };
   },
 
   async outOfOrderCount(from, to) {
-    return (await this.db.get('SELECT COUNT(*) FROM messageSummary WHERE outOfOrder = 1 AND timestamp BETWEEN ? AND ?', from, to))['COUNT(*)'];
+    return {
+      count: (await this.db.get('SELECT COUNT(*) FROM messageSummary WHERE outOfOrder = 1 AND timestamp BETWEEN ? AND ?', from, to))['COUNT(*)']
+    };
   },
 
   async maxHopCount(from, to) {
-    return (await this.db.get('SELECT MAX(maxHop) FROM messageSummary WHERE valid = 1 AND timestamp BETWEEN ? AND ?', from, to))['MAX(maxHop)'];
+    const maxHop = (await this.db.get('SELECT MAX(maxHop) FROM messageSummary WHERE valid = 1 AND timestamp BETWEEN ? AND ?', from, to))['MAX(maxHop)'];
+    const originator = typeof maxHop === 'number' ? (await this.db.get('SELECT originator FROM messageSummary WHERE valid = 1 AND timestamp BETWEEN ? AND ? AND maxHop >= ? LIMIT 1', from, to, maxHop)).originator : null;
+    return {
+      count: maxHop,
+      originator: originator
+    };
   },
 
   async maxJitterCount(from, to) {
-    return (await this.db.get('SELECT MAX(ABS(jitter)) FROM messageSummary WHERE valid = 1 AND timestamp BETWEEN ? AND ?', from, to))['MAX(ABS(jitter))'];
+    const maxJitter = (await this.db.get('SELECT MAX(ABS(jitter)) FROM messageSummary WHERE valid = 1 AND timestamp BETWEEN ? AND ?', from, to))['MAX(ABS(jitter))'];
+    const originator = typeof maxJitter === 'number' ? (await this.db.get('SELECT originator FROM messageSummary WHERE valid = 1 AND timestamp BETWEEN ? AND ? AND ABS(jitter) = ? LIMIT 1', from, to, maxJitter)).originator : null;
+    return {
+      count: maxJitter,
+      originator: originator
+    };
   },
 
   async messageSummary(from) {
