@@ -17,6 +17,7 @@ const LINK_TYPE = [ 'UNSPEC', 'ASYM', 'SYM', 'LOST' ];
 const NEIGHBOR_TYPE = [ 'SYM', 'MPR', 'NOT', '<3>' ];
 const NAME_TYPES = [ 'HOST', 'FORWARDER', 'SERVICE', 'LATLON', 'MACADDR' ];
 const STATE_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+const JITTER_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 
 class OLSR extends Emitter {
 
@@ -252,15 +253,16 @@ class OLSR extends Emitter {
       valid.zeroTtl = true;
     }
 
+    const now = Date.now();
     const originatorState = this.originators[originator] || (this.originators[originator] = { lastSeen: 0 });
-    if (Date.now() - originatorState.lastSeen > STATE_TIMEOUT) {
+    if (now - originatorState.lastSeen > STATE_TIMEOUT) {
       originatorState.seqnr = seqnr - 1;
       originatorState.messages = {};
     }
 
-    valid.jitter = ((seqnr - originatorState.seqnr) << 16) >> 16;
+    const jitter = ((seqnr - originatorState.seqnr) << 16) >> 16;
     const oldPayload = originatorState.messages[seqnr];
-    if (valid.jitter <= 0) {
+    if (jitter <= 0) {
       if (!oldPayload || payload.compare(oldPayload) !== 0) {
         valid.outOfOrder = true;
       }
@@ -269,9 +271,11 @@ class OLSR extends Emitter {
         valid.duplicate = true;
       }
     }
+    valid.jitter = now - originatorState.lastSeen > JITTER_TIMEOUT ? 1 : jitter;
+
     originatorState.seqnr = seqnr;
     originatorState.messages[seqnr] = payload;
-    originatorState.lastSeen = Date.now();
+    originatorState.lastSeen = now;
 
     return valid;
   }
