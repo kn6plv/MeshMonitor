@@ -55,10 +55,14 @@
     let cursor = {{cursor}};
     onMessage['chart.update.response.{{id}}'] = msg => {
       const ndata = msg.value.data;
+      const nextra = msg.value.extra || [];
       const data = chart.data.datasets[0].data;
+      const extra = chart.data.datasets[0].extra || [];
       for (let i = 0; i < ndata.length; i++) {
         data.shift();
         data.push(ndata[i]);
+        extra.shift();
+        extra.push(nextra[i]);
       }
       chart.update();
       cursor = msg.value.cursor;
