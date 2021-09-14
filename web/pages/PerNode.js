@@ -19,6 +19,10 @@ class PerNode extends Page {
     const gen = async (from, to) => {
       lastFrom = from;
       const nodes = {};
+      const known = NameService.getAllOriginators();
+      for (let originator in known) {
+        nodes[originator] = { originator: known[originator].name, address: originator, valid: 0, duplicate: 0, outOfOrder: 0, maxHop: 0, minHop: Number.MAX_SAFE_INTEGER };
+      }
       const results = await DB.getMessageGroup(from, to, SAMPLES);
       results.samples.forEach(entry => {
         const node = nodes[entry.originator] || (nodes[entry.originator] = { originator: NameService.lookupNameByIP(entry.originator) || entry.originator, address: entry.originator, valid: 0, duplicate: 0, outOfOrder: 0, maxHop: 0, minHop: Number.MAX_SAFE_INTEGER });
