@@ -2,7 +2,8 @@ module.exports = {
 
   General: {
     Name: 'Bay Area',
-    PortNr: 8083
+    PortNr: 8083,
+    Url: 'https://sfmon.xojs.org/'
   },
 
   Health: {

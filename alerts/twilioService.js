@@ -18,7 +18,7 @@ const notify = async (text) => {
     const to = Array.isArray(Config.Twilio.toPhoneNumber) ? Config.Twilio.toPhoneNumber : [ Config.Twilio.toPhoneNumber ];
     await Promise.all(to.map(toNumber => {
       return Client.messages.create({
-        body: text,
+        body: `${text} ${Config.General.Url}`,
         to: toNumber,
         from: Config.Twilio.fromPhoneNumber
       });
