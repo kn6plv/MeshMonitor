@@ -7,7 +7,8 @@ module.exports = {
   },
 
   OLSR: {
-    //Address: '...'
+    // Address: '...' // Monitor traffic on a specific interface (does not work on tunnels)
+    // Source: '...' // Monitor traffic from a specific source (useful for monitoring tunnels)
   },
 
   Health: {

@@ -21,21 +21,28 @@ const JITTER_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 
 class OLSR extends Emitter {
 
-  constructor() {
+  constructor(config) {
     super();
+    this.config = config;
     this.originators = {};
   }
 
-  open(options) {
-    if (!options.port) {
-      options.port = DEFAULT_PORT;
+  open() {
+    const options = {
+      port: this.config.port || DEFAULT_PORT
+    };
+    if (this.config.address) {
+      options.address = this.config.address;
     }
     this.udp = Dgram.createSocket({ type: 'udp4', reuseAddr: true });
     this.udp.bind(options);
-    this.udp.on('message', msg => this.incomingMessage(msg));
+    this.udp.on('message', (msg, rinfo) => this.incomingMessage(msg, rinfo));
   }
 
-  incomingMessage(msg) {
+  incomingMessage(msg, rinfo) {
+    if (this.config.source && this.config.source !== rinfo.address) {
+      return;
+    }
     const len = msg.readUInt16BE(0);
     const pktseqnr = msg.readUInt16BE(2);
 
@@ -288,10 +295,10 @@ class OLSR extends Emitter {
 let instance = null;
 
 module.exports = {
-  getInstance(options) {
+  getInstance(config) {
     if (!instance) {
-      instance = new OLSR();
-      instance.open(options);
+      instance = new OLSR(config);
+      instance.open();
     }
     return instance;
   }

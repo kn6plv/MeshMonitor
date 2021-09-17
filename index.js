@@ -12,6 +12,9 @@ const options = {};
 if (Config.OLSR.Address) {
   options.address = Config.OLSR.Address;
 }
+if (Config.OLSR.Source) {
+  options.source = Config.OLSR.Source;
+}
 require('./olsrlib').getInstance(options);
 require('./netMonitor');
 require('./nameService');
