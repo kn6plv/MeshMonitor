@@ -27,7 +27,7 @@ class OLSR extends Emitter {
   }
 
   open(portnr) {
-    this.udp = Dgram.createSocket({ type: 'udp4' });
+    this.udp = Dgram.createSocket({ type: 'udp4', reuseAddr: true });
     this.udp.bind(portnr || DEFAULT_PORT);
     this.udp.on('message', msg => this.incomingMessage(msg));
   }
