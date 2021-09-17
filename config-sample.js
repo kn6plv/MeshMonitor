@@ -6,6 +6,10 @@ module.exports = {
     Url: 'https://sfmon.xojs.org/'
   },
 
+  OLSR: {
+    //Address: '...'
+  },
+
   Health: {
     Storm: {
       HopCount: {

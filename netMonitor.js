@@ -17,7 +17,6 @@ const TRIM_AGE = 60 * 60 * 24 * 7 + 2 * TRIM_OFTEN;
     Log(JSON.stringify(m, null, 2));
     await DB.addMessage(m);
   });
-  dev.open();
 
   // Create a summary every hour
   const start = HOUR1 - Date.now() % HOUR1;

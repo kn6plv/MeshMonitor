@@ -26,9 +26,12 @@ class OLSR extends Emitter {
     this.originators = {};
   }
 
-  open(portnr) {
+  open(options) {
+    if (!options.port) {
+      options.port = DEFAULT_PORT;
+    }
     this.udp = Dgram.createSocket({ type: 'udp4', reuseAddr: true });
-    this.udp.bind(portnr || DEFAULT_PORT);
+    this.udp.bind(options);
     this.udp.on('message', msg => this.incomingMessage(msg));
   }
 
@@ -285,9 +288,10 @@ class OLSR extends Emitter {
 let instance = null;
 
 module.exports = {
-  getInstance(portnr) {
+  getInstance(options) {
     if (!instance) {
-      instance = new OLSR(portnr);
+      instance = new OLSR();
+      instance.open(options);
     }
     return instance;
   }
