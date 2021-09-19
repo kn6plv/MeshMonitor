@@ -1,0 +1,12 @@
+[Unit]
+Description=Example AREDN OLSR Monitor Service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/node --max-old-space-size=4096 /root/monitor/index.js
+Restart=on-failure
+User=root
+WorkingDirectory=/root/monitor
+
+[Install]
+WantedBy=multi-user.target
