@@ -1,3 +1,8 @@
+#side {
+  position: relative;
+  padding-top: 100px;
+}
+
 #side .title {
   position: fixed;
   top: 0;
@@ -31,9 +36,6 @@
   color: var(--minor-text-color);
 }
 
-#side {
-  padding-top: 100px;
-}
 #side .section {
   padding: 6px;
 }
@@ -43,6 +45,19 @@
 }
 #side .section .item:hover {
   color: var(--highlight-text-color);
+}
+
+#side .footer {
+  position: absolute;
+  width: 100%;
+  bottom: 20px;
+  font-size: 8px;
+  text-align: center;
+}
+#side .footer a {
+  color: var(--minor-text-color);
+  text-decoration: none;
+  padding-right: 32px;
 }
 
 .summary {
