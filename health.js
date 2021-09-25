@@ -16,6 +16,10 @@ class Health extends EventEmitter {
   constructor() {
     super();
 
+    function btoa(v) {
+      return Buffer.from(v).toString('base64');
+    }
+
     this.unhealthy = null;
     const maxHopTrack = MovingAverage(MAXHOP_OVER_TIME);
     let validAverage = 0;
@@ -34,13 +38,15 @@ class Health extends EventEmitter {
           if (name) {
             this.unhealthy = {
               reason: 'Storm',
-              text: `${name} (${m.originator})`
+              text: `${name} (${m.originator})`,
+              link: `#node#${btoa(JSON.stringify({ name: name, timestamp: Date.now() }))}`
             };
           }
           else {
             this.unhealthy = {
               reason: 'Storm',
-              text: m.originator
+              text: m.originator,
+              link: `#node#${btoa(JSON.stringify({ name: m.originator, timestamp: Date.now() }))}`
             };
           }
           this.emit('update');

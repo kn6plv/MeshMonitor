@@ -4,6 +4,8 @@ Health:
 <span class="status good">good</span>
 {{else}}
 <span class="status bad">{{reason}}</span>
+{{#if link}}<a href="{{link}}">{{/if}}
 <div class="status text">{{text}}</div>
+{{#if link}}</a>{{/if}}
 {{/if}}
 {{/with}}
