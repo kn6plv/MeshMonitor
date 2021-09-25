@@ -13,12 +13,12 @@ if (Log.enabled) {
   Client.logLevel = 'debug';
 }
 
-const notify = async (text) => {
+const notify = async (msg) => {
   try {
     const to = Array.isArray(Config.Twilio.toPhoneNumber) ? Config.Twilio.toPhoneNumber : [ Config.Twilio.toPhoneNumber ];
     await Promise.all(to.map(toNumber => {
       return Client.messages.create({
-        body: `${text} ${Config.General.Url}`,
+        body: `${msg.text} ${msg.link || Config.General.Url}`,
         to: toNumber,
         from: Config.Twilio.fromPhoneNumber
       });

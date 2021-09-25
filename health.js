@@ -35,22 +35,14 @@ class Health extends EventEmitter {
       if (!this.unhealthy) {
         if (maxHopTrack.movingAverage() >= MAXHOP_ALERT_HIGH && m.maxHop >= MAXHOP_ALERT_HIGH) {
           const name = NameService.lookupNameByIP(m.originator);
-          if (name) {
-            this.unhealthy = {
-              reason: 'Storm',
-              text: `${name} (${m.originator})`,
-              link: `#node#${btoa(JSON.stringify({ name: name, timestamp: Date.now() }))}`
-            };
-          }
-          else {
-            this.unhealthy = {
-              reason: 'Storm',
-              text: m.originator,
-              link: `#node#${btoa(JSON.stringify({ name: m.originator, timestamp: Date.now() }))}`
-            };
-          }
+          const link = `#node#${btoa(JSON.stringify({ name: name || m.originator, timestamp: Date.now() }))}`;
+          this.unhealthy = {
+            reason: 'Storm',
+            text: name ? `${name} (${m.originator})` : m.originator,
+            link: link
+          };
           this.emit('update');
-          await Alerts.notify(`Storm detected on ${Config.General.Name} Mesh by ${this.unhealthy.text}`);
+          await Alerts.notify({ text: `Storm detected on ${Config.General.Name} Mesh by ${this.unhealthy.text}`, link: link });
         }
         else if (1000 / validAverage <= VALID_ALERT_LOW) {
           this.unhealthy = {
@@ -58,7 +50,7 @@ class Health extends EventEmitter {
             text: 'Valid message rate low'
           };
           this.emit('update');
-          await Alerts.notify(`Valid message rate on ${Config.General.Name} Mesh is low`);
+          await Alerts.notify({ text: `Valid message rate on ${Config.General.Name} Mesh is low` });
         }
       }
       else {
@@ -67,14 +59,14 @@ class Health extends EventEmitter {
             if (maxHopTrack.movingAverage() <= MAXHOP_ALERT_LOW) {
               this.unhealthy = null;
               this.emit('update');
-              await Alerts.notify(`Storm subsided on ${Config.General.Name} Mesh`);
+              await Alerts.notify({ text: `Storm subsided on ${Config.General.Name} Mesh` });
             }
             break;
           case 'Low Messages':
             if (1000 / validAverage >= VALID_ALERT_HIGH) {
               this.unhealthy = null;
               this.emit('update');
-              await Alerts.notify(`Valid message rate on ${Config.General.Name} Mesh returned to normal`);
+              await Alerts.notify({ text: `Valid message rate on ${Config.General.Name} Mesh returned to normal` });
             }
             break;
           default:
@@ -84,7 +76,7 @@ class Health extends EventEmitter {
     });
 
     if (Log.enabled) {
-      Alerts.notify(`Starting ${Config.General.Name} Mesh Monitor`);
+      Alerts.notify({ text: `Starting ${Config.General.Name} Mesh Monitor` });
     }
   }
 
