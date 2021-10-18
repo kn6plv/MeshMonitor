@@ -11,6 +11,10 @@ module.exports = {
     // Source: '...' // Monitor traffic from a specific source (useful for monitoring tunnels)
   },
 
+  DB: {
+    History: 2 * 7 // Days of historical data to keep
+  },
+
   Health: {
     Storm: {
       HopCount: {
