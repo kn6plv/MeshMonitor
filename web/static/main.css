@@ -17,9 +17,11 @@
 }
 #side .title .sub {
   font-size: 24px;
+  padding-right: 20px;
   padding-bottom: 6px;
   margin-left: -1px;
   color: var(--highlight-text-color);
+  white-space: normal;
 }
 #side .title .health .status {
   text-transform: capitalize;
