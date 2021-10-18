@@ -138,8 +138,21 @@ const Database = {
     };
   },
 
-  async messageSummary(from) {
-    return (await this.db.get('SELECT * FROM messageHourlySummary WHERE timestamp = ?', from)) || {};
+  async messageSummary(to) {
+    return (await this.db.get('SELECT * FROM messageHourlySummary WHERE timestamp = ?', to)) || {};
+  },
+
+  async messageDailySummary(to) {
+    const from = to - 24 * 60 * 60 * 1000;
+    const all = await this.db.all('SELECT * FROM messageHourlySummary WHERE timestamp BETWEEN ? AND ?', from, to);
+    return {
+      timestamp: to,
+      valid: all.reduce((a, v) => a + v.valid, 0),
+      duplicate: all.reduce((a, v) => a + v.duplicate, 0),
+      outOfOrder: all.reduce((a, v) => a + v.outOfOrder, 0),
+      maxHop: all.reduce((a, v) => Math.max(a, v.maxHop), 0),
+      jitter: all.reduce((a, v) => Math.max(a, v.jitter), 0)
+    };
   },
 
   async getMessageGroup(from, to, samples) {

@@ -17,4 +17,12 @@
     {{> ChartThumb }}
     {{/each}}
   </div>
+  {{#if chart1week}}
+  <div class="charts-title">1 Week</div>
+  <div class="charts">
+    {{#each chart1week}}
+    {{> ChartThumb }}
+    {{/each}}
+  </div>
+  {{/if}}
 </div>

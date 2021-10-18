@@ -5,6 +5,7 @@ const NameService = require('../../nameService');
 const MIN5_AXIS = [ '-5', '', '', '', '', '', '-4', '', '', '', '', '', '-3', '', '', '', '', '', '-2', '', '', '', '', '', '-1', '', '', '', '', '', 'Now' ];
 const HOUR1_AXIS = [ '-60', '', '-50', '', '-40', '', '-30', '', '-20', '', '-10', '', 'Now' ];
 const DAY1_AXIS = [ '-23', '', '', '', '', '-18', '', '', '', '', '', '-12', '', '', '', '', '-6', '', '', '', '', '', 'Now' ];
+const WEEK1_AXIS = [ '-7', '', '', '', '', '', '', 'Now' ];
 
 const graphUpdateCache = {};
 
@@ -38,7 +39,17 @@ class Summary extends Page {
       await this.generateChart({ id: 'maxhop_d', title: 'Max Hops', color: 'purple' ,value: async (_, to) => (await DB.messageSummary(to)).maxHop, step: 3600, suggestedY: 30, labels: DAY1_AXIS, ticks: 13, units: { label: 'Hours', scale: 1 } }),
       await this.generateChart({ id: 'jitter_d', title: 'Max Seq Jitter', color: 'orange', value: async (_, to) => (await DB.messageSummary(to)).jitter, step: 3600, suggestedY: 100, labels: DAY1_AXIS, ticks: 13, units: { label: 'Hours', scale: 1 } }),
     ];
-    this.html('info', this.template.Summary({ chart5min, chart1hour, chart1day }));
+    const chart1week = [];
+    if (Config.DB.History >= 7) {
+      chart1week.push(
+        await this.generateChart({ id: 'valid_w', title: 'Valid', ytitle: 'messages / sec', color: 'green', value: async (_, to) => (await DB.messageDailySummary(to)).valid / 86400, step: 86400, suggestedY: 200, labels: WEEK1_AXIS, ticks: 8, units: { label: 'Days', scale: 1 } }),
+        await this.generateChart({ id: 'duplicate_w', title: 'Duplicate', ytitle: 'messages / sec', color: 'blue', value: async (_, to) => (await DB.messageDailySummary(to)).duplicate / 86400, step: 86400, suggestedY: 200, labels: WEEK1_AXIS, ticks: 8, units: { label: 'Days', scale: 1 } }),
+        await this.generateChart({ id: 'outoforder_w', title: 'Out Of Order', ytitle: 'messages / sec', color: 'salmon', value: async (_, to) => (await DB.messageDailySummary(to)).outOfOrder / 86400, step: 86400, suggestedY: 200, labels: WEEK1_AXIS, ticks: 8, units: { label: 'Days', scale: 1 } }),
+        await this.generateChart({ id: 'maxhop_w', title: 'Max Hops', color: 'purple' ,value: async (_, to) => (await DB.messageDailySummary(to)).maxHop, step: 86400, suggestedY: 30, labels: WEEK1_AXIS, ticks: 8, units: { label: 'Days', scale: 1 } }),
+        await this.generateChart({ id: 'jitter_w', title: 'Max Seq Jitter', color: 'orange', value: async (_, to) => (await DB.messageDailySummary(to)).jitter, step: 86400, suggestedY: 100, labels: WEEK1_AXIS, ticks: 8, units: { label: 'Days', scale: 1 } }),
+      );
+    }
+    this.html('info', this.template.Summary({ chart5min, chart1hour, chart1day, chart1week }));
   }
 
   async deselect() {
