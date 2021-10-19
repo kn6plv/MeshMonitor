@@ -3,6 +3,8 @@ const SQLite = require('sqlite');
 const FS = require('fs');
 const Log = require('debug')('db');
 
+const DB_FILENAME = Config.DB.Filename || 'state/olsr.db';
+
 const Database = {
 
   _messageTrim: {
@@ -14,7 +16,7 @@ const Database = {
   async open() {
     FS.mkdirSync('state', { recursive: true });
     this.db = await SQLite.open({
-      filename: 'state/olsr.db',
+      filename: DB_FILENAME,
       driver: SQLite3.cached.Database
     });
     if (Log.enabled) {

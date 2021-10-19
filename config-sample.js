@@ -12,7 +12,8 @@ module.exports = {
   },
 
   DB: {
-    History: 2 * 7 // Days of historical data to keep
+    History: 14, // Days of historical data to keep
+    // Filename: '...', // Override default DB filename
   },
 
   Health: {
